@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  passwordHash String
+  name         String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  categories   Category[]
+  periods      Period[]
+
+  @@map("users")
+}
+
+model Period {
+  id              String           @id @default(cuid())
+  userId          String
+  startDate       DateTime
+  endDate         DateTime?
+  status          PeriodStatus     @default(ACTIVE)
+  durationDays    Int?
+  summaryJson     Json?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  closedAt        DateTime?
+  budgetAdditions BudgetAddition[]
+  expenses        Expense[]
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([userId, startDate])
+  @@map("periods")
+}
+
+model BudgetAddition {
+  id           String     @id @default(cuid())
+  periodId     String
+  type         BudgetType
+  amount       Decimal    @db.Decimal(10, 2)
+  source       String
+  date         DateTime
+  comments     String?
+  budgetBefore Decimal    @db.Decimal(10, 2)
+  budgetAfter  Decimal    @db.Decimal(10, 2)
+  createdAt    DateTime   @default(now())
+  period       Period     @relation(fields: [periodId], references: [id], onDelete: Cascade)
+
+  @@index([periodId])
+  @@index([periodId, date])
+  @@map("budget_additions")
+}
+
+model Expense {
+  id             String   @id @default(cuid())
+  periodId       String
+  categoryId     String
+  expenseName    String
+  amount         Decimal  @db.Decimal(10, 2)
+  date           DateTime
+  comments       String?
+  budgetBefore   Decimal  @db.Decimal(10, 2)
+  budgetAfter    Decimal  @db.Decimal(10, 2)
+  snapshotAt     DateTime
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  originalAmount Decimal? @db.Decimal(10, 2)
+  category       Category @relation(fields: [categoryId], references: [id])
+  period         Period   @relation(fields: [periodId], references: [id], onDelete: Cascade)
+
+  @@index([periodId])
+  @@index([periodId, date])
+  @@index([categoryId])
+  @@map("expenses")
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  userId    String
+  name      String
+  icon      String
+  color     String?
+  isDefault Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expenses  Expense[]
+
+  @@unique([userId, name])
+  @@index([userId])
+  @@map("categories")
+}
+
+enum PeriodStatus {
+  ACTIVE
+  CLOSED
+}
+
+enum BudgetType {
+  INCOME
+  ADJUSTMENT
+  DEDUCTION
+}
