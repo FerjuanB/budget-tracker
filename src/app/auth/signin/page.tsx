@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
-export default function SignInPage() {
+// Componente que usa useSearchParams, envuelto en Suspense
+function SignInForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard'
@@ -186,5 +187,22 @@ export default function SignInPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+// Componente principal con Suspense
+export default function SignInPage() {
+  return (
+    <Suspense fallback={
+      <div className="space-y-8">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+            Cargando...
+          </h1>
+        </div>
+      </div>
+    }>
+      <SignInForm />
+    </Suspense>
   )
 }
