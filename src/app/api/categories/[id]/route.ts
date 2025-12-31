@@ -7,15 +7,16 @@ import { z } from 'zod'
 // GET /api/categories/[id] - Get specific category
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   try {
     const user = await getAuthenticatedUser()
     if (!user) return unauthorizedResponse()
 
     const category = await prisma.category.findFirst({
       where: {
-        id: params.id,
+        id: id,
         userId: user.id,
       },
       include: {
@@ -50,8 +51,9 @@ export async function GET(
 // PUT /api/categories/[id] - Update category
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   try {
     const user = await getAuthenticatedUser()
     if (!user) return unauthorizedResponse()
@@ -62,7 +64,7 @@ export async function PUT(
     // Verify category belongs to user
     const existingCategory = await prisma.category.findFirst({
       where: {
-        id: params.id,
+        id: id,
         userId: user.id,
       },
     })
@@ -81,7 +83,7 @@ export async function PUT(
           userId: user.id,
           name: validated.name,
           id: {
-            not: params.id,
+            not: id,
           },
         },
       })
@@ -97,7 +99,7 @@ export async function PUT(
     // Update category
     const updatedCategory = await prisma.category.update({
       where: {
-        id: params.id,
+        id: id,
       },
       data: {
         ...(validated.name && { name: validated.name }),
@@ -121,7 +123,7 @@ export async function PUT(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.issues },
         { status: 400 }
       )
     }
@@ -136,8 +138,9 @@ export async function PUT(
 // DELETE /api/categories/[id] - Delete category with reassignment
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   try {
     const user = await getAuthenticatedUser()
     if (!user) return unauthorizedResponse()
@@ -149,7 +152,7 @@ export async function DELETE(
     // Verify category belongs to user
     const category = await prisma.category.findFirst({
       where: {
-        id: params.id,
+        id: id,
         userId: user.id,
       },
       include: {
@@ -199,7 +202,7 @@ export async function DELETE(
       }
 
       // Cannot reassign to the same category
-      if (reassignToCategoryId === params.id) {
+      if (reassignToCategoryId === id) {
         return NextResponse.json(
           { error: 'Cannot reassign to the same category' },
           { status: 400 }
@@ -211,7 +214,7 @@ export async function DELETE(
         // Update all expenses to use new category
         await tx.expense.updateMany({
           where: {
-            categoryId: params.id,
+            categoryId: id,
           },
           data: {
             categoryId: reassignToCategoryId,
@@ -221,7 +224,7 @@ export async function DELETE(
         // Delete old category
         await tx.category.delete({
           where: {
-            id: params.id,
+            id: id,
           },
         })
       })
@@ -236,7 +239,7 @@ export async function DELETE(
       // No expenses, direct delete
       await prisma.category.delete({
         where: {
-          id: params.id,
+          id: id,
         },
       })
 

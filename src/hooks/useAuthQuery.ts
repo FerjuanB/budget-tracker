@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { getSession, getCurrentUser } from '@/lib/auth/session'
+import { getSession } from '@/lib/auth/session'
 
 // Types
 export interface User {
@@ -20,8 +20,8 @@ const authApi = {
   },
 
   getCurrentUser: async (): Promise<User | null> => {
-    const user = await getCurrentUser()
-    return user as User | null
+    const session = await getSession()
+    return session?.user as User | null
   },
 
   checkAuth: async (): Promise<boolean> => {

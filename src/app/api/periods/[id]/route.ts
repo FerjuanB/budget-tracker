@@ -7,15 +7,16 @@ import { z } from 'zod'
 // GET /api/periods/[id] - Get specific period
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   try {
     const user = await getAuthenticatedUser()
     if (!user) return unauthorizedResponse()
 
     const period = await prisma.period.findFirst({
       where: {
-        id: params.id,
+        id: id,
         userId: user.id,
       },
       include: {
@@ -66,8 +67,9 @@ export async function GET(
 // PUT /api/periods/[id] - Update period (limited fields)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   try {
     const user = await getAuthenticatedUser()
     if (!user) return unauthorizedResponse()
@@ -78,7 +80,7 @@ export async function PUT(
     // Verify period belongs to user
     const existingPeriod = await prisma.period.findFirst({
       where: {
-        id: params.id,
+        id: id,
         userId: user.id,
       },
     })
@@ -93,7 +95,7 @@ export async function PUT(
     // Only allow updating endDate and summaryJson (manually)
     const updatedPeriod = await prisma.period.update({
       where: {
-        id: params.id,
+        id: id,
       },
       data: {
         ...(validated.endDate && { endDate: new Date(validated.endDate) }),
@@ -109,7 +111,7 @@ export async function PUT(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.issues },
         { status: 400 }
       )
     }
@@ -124,8 +126,9 @@ export async function PUT(
 // DELETE /api/periods/[id] - Delete period (only if no expenses/budgets)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   try {
     const user = await getAuthenticatedUser()
     if (!user) return unauthorizedResponse()
@@ -133,7 +136,7 @@ export async function DELETE(
     // Verify period belongs to user and check for related data
     const period = await prisma.period.findFirst({
       where: {
-        id: params.id,
+        id: id,
         userId: user.id,
       },
       include: {
@@ -169,7 +172,7 @@ export async function DELETE(
 
     await prisma.period.delete({
       where: {
-        id: params.id,
+        id: id,
       },
     })
 

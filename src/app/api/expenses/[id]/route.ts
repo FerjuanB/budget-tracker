@@ -8,15 +8,16 @@ import { Decimal } from '@prisma/client/runtime/library'
 // GET /api/expenses/[id] - Get specific expense
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   try {
     const user = await getAuthenticatedUser()
     if (!user) return unauthorizedResponse()
 
     const expense = await prisma.expense.findFirst({
       where: {
-        id: params.id,
+        id: id,
         period: {
           userId: user.id,
         },
@@ -63,8 +64,9 @@ export async function GET(
 // PUT /api/expenses/[id] - Update expense (preserves original snapshot)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   try {
     const user = await getAuthenticatedUser()
     if (!user) return unauthorizedResponse()
@@ -75,7 +77,7 @@ export async function PUT(
     // Verify expense belongs to user and period is active
     const existingExpense = await prisma.expense.findFirst({
       where: {
-        id: params.id,
+        id: id,
         period: {
           userId: user.id,
           status: 'ACTIVE',
@@ -143,7 +145,7 @@ export async function PUT(
 
     const updatedExpense = await prisma.expense.update({
       where: {
-        id: params.id,
+        id: id,
       },
       data: updateData,
       include: {
@@ -165,7 +167,7 @@ export async function PUT(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.issues },
         { status: 400 }
       )
     }
@@ -180,8 +182,9 @@ export async function PUT(
 // DELETE /api/expenses/[id] - Delete expense (only if period is ACTIVE)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   try {
     const user = await getAuthenticatedUser()
     if (!user) return unauthorizedResponse()
@@ -189,7 +192,7 @@ export async function DELETE(
     // Verify expense belongs to user and period is active
     const expense = await prisma.expense.findFirst({
       where: {
-        id: params.id,
+        id: id,
         period: {
           userId: user.id,
           status: 'ACTIVE',
@@ -206,7 +209,7 @@ export async function DELETE(
 
     await prisma.expense.delete({
       where: {
-        id: params.id,
+        id: id,
       },
     })
 

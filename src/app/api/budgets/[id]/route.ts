@@ -5,15 +5,16 @@ import { prisma } from '@/lib/prisma'
 // GET /api/budgets/[id] - Get specific budget addition
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   try {
     const user = await getAuthenticatedUser()
     if (!user) return unauthorizedResponse()
 
     const budgetAddition = await prisma.budgetAddition.findFirst({
       where: {
-        id: params.id,
+        id: id,
         period: {
           userId: user.id,
         },
@@ -52,8 +53,9 @@ export async function GET(
 // DELETE /api/budgets/[id] - Delete budget addition (only if period is ACTIVE)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   try {
     const user = await getAuthenticatedUser()
     if (!user) return unauthorizedResponse()
@@ -61,7 +63,7 @@ export async function DELETE(
     // Verify budget addition belongs to user and period is active
     const budgetAddition = await prisma.budgetAddition.findFirst({
       where: {
-        id: params.id,
+        id: id,
         period: {
           userId: user.id,
           status: 'ACTIVE',
@@ -78,7 +80,7 @@ export async function DELETE(
 
     await prisma.budgetAddition.delete({
       where: {
-        id: params.id,
+        id: id,
       },
     })
 
