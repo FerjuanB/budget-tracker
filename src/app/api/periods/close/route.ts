@@ -103,6 +103,14 @@ export async function POST(request: NextRequest) {
         totalAdjustments,
         totalDeductions,
         totalBudget,
+        items: period.budgetAdditions.map((b) => ({
+          id: b.id,
+          type: b.type,
+          amount: Number(b.amount),
+          source: b.source,
+          comments: b.comments,
+          date: b.date?.toISOString(),
+        })),
       },
       expenses: {
         total: totalExpenses,
