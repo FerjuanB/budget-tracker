@@ -28,7 +28,7 @@ export default function FilterByCategory({
             htmlFor="category"
             className="text-sm font-medium text-gray-700 dark:text-gray-300"
           >
-            Filtrar gastos por categoría
+            Filtrar por
           </label>
           <div className="flex gap-2 flex-1">
             <select
@@ -38,7 +38,8 @@ export default function FilterByCategory({
               disabled={isLoading}
               className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <option value="">Todas las categorías</option>
+              <option value="">Todos los movimientos</option>
+              <option value="__BUDGET_ADDITIONS__">💰 Adiciones de presupuesto</option>
               {categories?.map((category) => (
                 <option key={category.id} value={category.id}>
                   {category.icon} {category.name}

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { useCurrentPeriod, usePeriods, useExpenses, useDeleteExpense, useCreatePeriod, Expense, BudgetPeriod } from '@/hooks/useBudgetData'
+import { useCurrentPeriod, usePeriods, useExpenses, useBudgetAdditions, useDeleteExpense, useCreatePeriod, Expense, BudgetPeriod } from '@/hooks/useBudgetData'
 import BudgetTracker from '@/components/BudgetTracker'
 import BudgetForm from '@/components/BudgetForm'
 import ExpenseForm from '@/components/ExpenseForm'
@@ -53,6 +53,7 @@ export default function DashboardPage() {
   const isActivePeriod = selectedPeriod?.status === 'ACTIVE'
   
   const { data: expenses, isLoading: loadingExpenses } = useExpenses(selectedPeriod?.id || '')
+  const { data: budgetAdditions, isLoading: loadingBudgets } = useBudgetAdditions(selectedPeriod?.id || '')
   const deleteExpenseMutation = useDeleteExpense()
 
   const [filteredCategory, setFilteredCategory] = useState('')
@@ -315,7 +316,8 @@ export default function DashboardPage() {
               <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6 border border-gray-200 dark:border-gray-700">
                 <ExpenseList
                   expenses={expenses || []}
-                  isLoading={loadingExpenses}
+                  budgetAdditions={budgetAdditions || []}
+                  isLoading={loadingExpenses || loadingBudgets}
                   filteredCategory={filteredCategory}
                   onEditExpense={handleEditExpense}
                   onDeleteExpense={handleDeleteExpense}

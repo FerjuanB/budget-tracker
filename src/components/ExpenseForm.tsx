@@ -139,7 +139,7 @@ export default function ExpenseForm({ expenseToEdit, selectedPeriod, onSuccess, 
           expenseName: formData.expenseName.trim(),
           amount: parseFloat(formData.amount),
           categoryId: formData.categoryId,
-          date: new Date(formData.date).toISOString(),
+          date: formData.date + 'T12:00:00.000Z',
           comments: formData.comments.trim() || undefined,
         })
       } else {
@@ -149,7 +149,7 @@ export default function ExpenseForm({ expenseToEdit, selectedPeriod, onSuccess, 
           expenseName: formData.expenseName.trim(),
           amount: parseFloat(formData.amount),
           categoryId: formData.categoryId,
-          date: new Date(formData.date).toISOString(),
+          date: formData.date + 'T12:00:00.000Z',
           comments: formData.comments.trim() || undefined,
         })
       }

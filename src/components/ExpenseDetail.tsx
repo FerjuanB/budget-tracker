@@ -10,7 +10,8 @@ interface ExpenseDetailProps {
 
 export default function ExpenseDetail({ expense, onEdit, onDelete }: ExpenseDetailProps) {
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
+    const [year, month, day] = dateString.split('T')[0].split('-').map(Number)
+    const date = new Date(year, month - 1, day)
     return date.toLocaleDateString('es-ES', {
       year: 'numeric',
       month: 'long',

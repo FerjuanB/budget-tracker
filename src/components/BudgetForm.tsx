@@ -12,6 +12,7 @@ export default function BudgetForm({ onSuccess }: BudgetFormProps) {
     type: 'INCOME' as 'INCOME' | 'ADJUSTMENT' | 'DEDUCTION',
     amount: '',
     source: '',
+    date: new Date().toISOString().split('T')[0],
     comments: '',
   })
   const [error, setError] = useState('')
@@ -49,6 +50,7 @@ export default function BudgetForm({ onSuccess }: BudgetFormProps) {
         type: formData.type,
         amount: parseFloat(formData.amount),
         source: formData.source.trim(),
+        date: formData.date + 'T12:00:00.000Z',
         comments: formData.comments.trim() || undefined,
       })
 
@@ -57,6 +59,7 @@ export default function BudgetForm({ onSuccess }: BudgetFormProps) {
         type: 'INCOME',
         amount: '',
         source: '',
+        date: new Date().toISOString().split('T')[0],
         comments: '',
       })
 
@@ -168,6 +171,22 @@ export default function BudgetForm({ onSuccess }: BudgetFormProps) {
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white"
             placeholder="Ej: Salario mensual, Freelance, etc."
             maxLength={100}
+          />
+        </div>
+
+        {/* Fecha */}
+        <div className="space-y-2">
+          <label htmlFor="date" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Fecha <span className="text-red-500">*</span>
+          </label>
+          <input
+            id="date"
+            name="date"
+            type="date"
+            value={formData.date}
+            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+            max={new Date().toISOString().split('T')[0]}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white"
           />
         </div>
 
