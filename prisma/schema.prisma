@@ -9,14 +9,16 @@ datasource db {
 }
 
 model User {
-  id           String     @id @default(cuid())
-  email        String     @unique
-  passwordHash String
-  name         String?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  categories   Category[]
-  periods      Period[]
+  id                String             @id @default(cuid())
+  email             String             @unique
+  passwordHash      String
+  name              String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  categories        Category[]
+  periods           Period[]
+  recurringExpenses RecurringExpense[]
+  ocrScans           OcrScan[]
 
   @@map("users")
 }
@@ -60,21 +62,23 @@ model BudgetAddition {
 }
 
 model Expense {
-  id             String   @id @default(cuid())
-  periodId       String
-  categoryId     String
-  expenseName    String
-  amount         Decimal  @db.Decimal(10, 2)
-  date           DateTime
-  comments       String?
-  budgetBefore   Decimal  @db.Decimal(10, 2)
-  budgetAfter    Decimal  @db.Decimal(10, 2)
-  snapshotAt     DateTime
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  originalAmount Decimal? @db.Decimal(10, 2)
-  category       Category @relation(fields: [categoryId], references: [id])
-  period         Period   @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  id                 String            @id @default(cuid())
+  periodId           String
+  categoryId         String
+  expenseName        String
+  amount             Decimal           @db.Decimal(10, 2)
+  date               DateTime
+  comments           String?
+  budgetBefore       Decimal           @db.Decimal(10, 2)
+  budgetAfter        Decimal           @db.Decimal(10, 2)
+  snapshotAt         DateTime
+  source             ExpenseSource     @default(MANUAL)
+  recurringInstance  RecurringInstance?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  originalAmount     Decimal?          @db.Decimal(10, 2)
+  category           Category          @relation(fields: [categoryId], references: [id])
+  period             Period            @relation(fields: [periodId], references: [id], onDelete: Cascade)
 
   @@index([periodId])
   @@index([periodId, date])
@@ -83,16 +87,17 @@ model Expense {
 }
 
 model Category {
-  id        String    @id @default(cuid())
-  userId    String
-  name      String
-  icon      String
-  color     String?
-  isDefault Boolean   @default(false)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  expenses  Expense[]
+  id                String             @id @default(cuid())
+  userId            String
+  name              String
+  icon              String
+  color             String?
+  isDefault         Boolean            @default(false)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expenses          Expense[]
+  recurringExpenses RecurringExpense[]
 
   @@unique([userId, name])
   @@index([userId])
@@ -108,4 +113,113 @@ enum BudgetType {
   INCOME
   ADJUSTMENT
   DEDUCTION
+}
+
+// ─── V2: Recurring Expenses (Phase 2.5.C) ──────────────────
+model RecurringExpense {
+  id              String              @id @default(cuid())
+  userId          String
+  categoryId      String
+  name            String              // "Netflix", "Edenor", "Visa"
+  icon            String?             // emoji or icon identifier
+  baseAmount      Decimal             @db.Decimal(10, 2) // default amount
+  isVariable      Boolean             @default(false)    // prompt for amount each cycle
+  
+  // Frequency
+  frequency       RecurrenceFrequency @default(MONTHLY)
+  dayOfMonth      Int?                // 1-28 (capped to avoid Feb 30)
+  everyNMonths    Int                 @default(1)        // 1=monthly, 2=bi-monthly, etc.
+  
+  // For multi-installment services (e.g., bi-monthly Edenor split in 2)
+  splitInto       Int                 @default(1)
+  splitDayOffset  Int?                // days between installments within the same billing month
+  
+  // Control
+  isActive        Boolean             @default(true)
+  startDate       DateTime
+  endDate         DateTime?
+  lastGeneratedAt DateTime?
+  
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category        Category            @relation(fields: [categoryId], references: [id])
+  instances       RecurringInstance[]
+  
+  @@index([userId, isActive])
+  @@index([frequency, dayOfMonth])
+  @@map("recurring_expenses")
+}
+
+model RecurringInstance {
+  id               String           @id @default(cuid())
+  recurringId      String
+  expenseId        String?          @unique // linked Expense (one-to-one)
+  
+  // Snapshot at generation time (may differ from template if manually edited)
+  amount           Decimal          @db.Decimal(10, 2)
+  dueDate          DateTime
+  installmentNum   Int              @default(1) // e.g. 1 of 2
+  installmentTotal Int              @default(1) // total installments for this billing
+  
+  status           RecurringStatus  @default(PENDING)
+  appliedAt        DateTime?
+  skippedAt        DateTime?
+  note             String?
+  
+  createdAt        DateTime         @default(now())
+  
+  recurring        RecurringExpense @relation(fields: [recurringId], references: [id], onDelete: Cascade)
+  expense          Expense?         @relation(fields: [expenseId], references: [id])
+  
+  @@unique([recurringId, dueDate, installmentNum])
+  @@index([status, dueDate])
+  @@map("recurring_instances")
+}
+
+enum RecurrenceFrequency {
+  MONTHLY
+  BIMONTHLY
+  QUARTERLY
+  YEARLY
+}
+
+enum RecurringStatus {
+  PENDING
+  APPLIED
+  SKIPPED
+  EDITED
+}
+
+// ─── V2: OCR Scans (Phase 2.5.D) ───────────────────────────
+model OcrScan {
+  id           String   @id @default(cuid())
+  userId       String
+  imageUrl     String   // Supabase Storage path for receipt
+  rawResponse  Json     // raw LLM output
+  parsed       Json     // normalized {amount, merchant, category_hint, date}
+  expenseId    String?  // set when user confirms & creates Expense
+  status       OcrStatus @default(PENDING)
+  createdAt    DateTime @default(now())
+  
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, createdAt])
+  @@map("ocr_scans")
+}
+
+enum OcrStatus {
+  PENDING
+  CONFIRMED
+  EDITED
+  REJECTED
+}
+
+enum ExpenseSource {
+  MANUAL
+  QUICK_ADD
+  OCR
+  RECURRING_AUTO
+  RECURRING_EDITED
 }

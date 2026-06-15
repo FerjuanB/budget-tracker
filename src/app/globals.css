@@ -1,26 +1,151 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* ═══════════════════════════════════════════════════════════
+   iOS NATIVE FEEL — Design Tokens
+   
+   Aesthetic: translucency, spring physics, depth.
+   Typography: Cabinet Grotesk (headings) + Inter (body).
+   
+   Philosophy: mobile-first, tabular numbers, intentional whitespace.
+   When we do the full visual refresh, only these tokens change.
+   ═══════════════════════════════════════════════════════════ */
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* ── Fonts ─────────────────────────────────────────────── */
+  --font-heading: "Cabinet Grotesk", var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", monospace;
+  
+  /* ── Surfaces (iOS layered depth) ──────────────────────── */
+  --color-surface-primary: #ffffff;
+  --color-surface-secondary: #f2f2f7;           /* iOS systemGroupedBackground */
+  --color-surface-tertiary: #ffffff;             /* iOS tertiaryGroupedBackground */
+  --color-surface-elevated: #ffffff;             /* For sheets/card modals */
+  --color-surface-quaternary: rgba(118, 118, 128, 0.08);
+  
+  /* ── Text (iOS label hierarchy) ────────────────────────── */
+  --color-label-primary: #000000;
+  --color-label-secondary: #3c3c43;              /* 60% opacity typically */
+  --color-label-tertiary: #3c3c43;               /* 30% opacity */
+  --color-label-quaternary: #3c3c43;             /* 18% opacity */
+  --color-label-inverted: #ffffff;
+  
+  /* ── Semantic (Apple HIG-inspired tints) ───────────────── */
+  --color-accent: #007aff;                        /* iOS blue */
+  --color-success: #34c759;                       /* iOS green */
+  --color-warning: #ff9500;                       /* iOS orange */
+  --color-destructive: #ff3b30;                   /* iOS red */
+  --color-purple: #af52de;                        /* iOS purple */
+  --color-pink: #ff2d55;
+  --color-teal: #5ac8fa;
+  
+  /* ── Dividers ──────────────────────────────────────────── */
+  --color-separator: rgba(60, 60, 67, 0.29);
+  --color-separator-strong: rgba(60, 60, 67, 0.36);
+  
+  /* ── Radius (intentional, not default rounded-lg) ─────── */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;                              /* Sheets, modals */
+  --radius-full: 9999px;
+  
+  /* ── Shadows (layered for iOS feel) ────────────────────── */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06);
+  --shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.18), 0 8px 16px rgba(0, 0, 0, 0.08);
+  --shadow-sheet: 0 -8px 32px rgba(0, 0, 0, 0.12);
+  
+  /* ── Transitions (spring feel) ─────────────────────────── */
+  --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  --duration-fast: 180ms;
+  --duration-normal: 320ms;
+  --duration-slow: 480ms;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ── Dark mode tokens (iOS-style deep dark) ──────────────── */
+.dark {
+  --color-surface-primary: #000000;
+  --color-surface-secondary: #1c1c1e;
+  --color-surface-tertiary: #2c2c2e;
+  --color-surface-elevated: #3a3a3c;
+  --color-surface-quaternary: rgba(118, 118, 128, 0.18);
+  
+  --color-label-primary: #ffffff;
+  --color-label-secondary: #ebebf5;
+  --color-label-tertiary: #ebebf5;
+  --color-label-quaternary: #ebebf5;
+  
+  --color-separator: rgba(84, 84, 88, 0.65);
 }
 
+/* ── Base styles ─────────────────────────────────────────── */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-surface-secondary);
+  color: var(--color-label-primary);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "ss01", "cv01";
+}
+
+/* Tabular numbers for amounts everywhere */
+.amount, [data-amount] {
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-heading);
+  font-weight: 700;
+}
+
+/* Heading typography */
+h1, h2, h3, .heading {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+h1 { font-size: 34px; line-height: 40px; }
+h2 { font-size: 28px; line-height: 34px; }
+h3 { font-size: 22px; line-height: 28px; }
+
+/* ── Bottom sheet base animations ────────────────────────── */
+@keyframes sheet-slide-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.sheet-enter {
+  animation: sheet-slide-up var(--duration-normal) var(--ease-spring);
+}
+
+/* iOS-style backdrop blur for sheets */
+.sheet-backdrop {
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: rgba(0, 0, 0, 0.35);
+}
+
+/* Sheet drag-handle visual cue */
+.sheet-handle {
+  width: 36px;
+  height: 5px;
+  border-radius: var(--radius-full);
+  background: rgba(120, 120, 128, 0.34);
+  margin: 8px auto;
+}
+
+/* ── Utility: hide scroll but keep scrollable ────────────── */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── FAB tap feedback ────────────────────────────────────── */
+.fab-tap:active {
+  transform: scale(0.94);
 }

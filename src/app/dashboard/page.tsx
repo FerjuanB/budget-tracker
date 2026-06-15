@@ -10,6 +10,7 @@ import ExpenseList from '@/components/ExpenseList'
 import FilterByCategory from '@/components/FilterByCategory'
 import ExpenseModal from '@/components/ExpenseModal'
 import PeriodSelector from '@/components/PeriodSelector'
+import FloatingAddButton from '@/components/fab/FloatingAddButton'
 
 export default function DashboardPage() {
   const { data: session } = useSession()
@@ -90,7 +91,9 @@ export default function DashboardPage() {
   const hasBudget = selectedPeriod?.summary?.totalBudget && selectedPeriod.summary.totalBudget > 0
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-24">
+      {/* FAB (floating action button) — main entry for adding expenses */}
+      <FloatingAddButton />
       {/* Welcome header */}
       {/* <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6 border border-gray-200 dark:border-gray-700">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
