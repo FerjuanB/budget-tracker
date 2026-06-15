@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useCategories, useCreateExpense, useCurrentPeriod } from '@/hooks/useBudgetData'
+import { useState, useEffect, useMemo } from 'react'
+import { useCategories, useCreateExpense, useCurrentPeriod, useExpenses, Category as CategoryType } from '@/hooks/useBudgetData'
 
 interface QuickAddSheetProps {
   onSuccess?: () => void
@@ -12,11 +12,14 @@ interface CategoryOption {
   id: string
   name: string
   icon: string
+  countThisPeriod: number
+  countTotal: number
 }
 
 /**
  * Fast expense entry: amount + category in 3 seconds.
- * Opens after choosing "Gasto rápido" from the Action Sheet.
+ * Categories are sorted by usage: most-used this period first,
+ * then by historical count, then unused ones.
  */
 export default function QuickAddSheet({ onSuccess, onBack }: QuickAddSheetProps) {
   const [amount, setAmount] = useState('')
@@ -27,10 +30,45 @@ export default function QuickAddSheet({ onSuccess, onBack }: QuickAddSheetProps)
 
   const { data: categories } = useCategories()
   const { data: currentPeriod } = useCurrentPeriod()
+  const { data: expenses } = useExpenses(currentPeriod?.id || '')
   const createExpense = useCreateExpense()
 
-  // Take top 8 categories (later: sort by usage frequency)
-  const topCategories: CategoryOption[] = (categories || []).slice(0, 8)
+  // Sort categories by usage in current period, then by historical count
+  const sortedCategories: CategoryOption[] = useMemo(() => {
+    if (!categories) return []
+
+    // Count expenses per category in the current period
+    const thisPeriodCount: Record<string, number> = {}
+    if (expenses) {
+      for (const exp of expenses) {
+        thisPeriodCount[exp.categoryId] = (thisPeriodCount[exp.categoryId] || 0) + 1
+      }
+    }
+
+    return (categories as (CategoryType & { _count?: { expenses: number } })[])
+      .map((cat) => ({
+        id: cat.id,
+        name: cat.name,
+        icon: cat.icon,
+        countThisPeriod: thisPeriodCount[cat.id] || 0,
+        countTotal: cat._count?.expenses || 0,
+      }))
+      .sort((a, b) => {
+        // Primary: this period count (desc)
+        if (b.countThisPeriod !== a.countThisPeriod) {
+          return b.countThisPeriod - a.countThisPeriod
+        }
+        // Secondary: historical total count (desc)
+        if (b.countTotal !== a.countTotal) {
+          return b.countTotal - a.countTotal
+        }
+        // Tie-breaker: name alphabetical
+        return a.name.localeCompare(b.name)
+      })
+  }, [categories, expenses])
+
+  // Show top 8 in the grid (the rest can be revealed later via "see more")
+  const topCategories = sortedCategories.slice(0, 8)
 
   // Reset on open
   useEffect(() => {
@@ -51,13 +89,6 @@ export default function QuickAddSheet({ onSuccess, onBack }: QuickAddSheetProps)
     const expenseName = name.trim() || category?.name || 'Gasto rápido'
     const parsedAmount = parseFloat(amount)
 
-    // Allow overspend but warn
-    if (currentPeriod.summary?.remainingBudget !== undefined) {
-      if (parsedAmount > currentPeriod.summary.remainingBudget) {
-        // Soft warning only — don't block
-      }
-    }
-
     try {
       await createExpense.mutateAsync({
         periodId: currentPeriod.id,
@@ -65,7 +96,6 @@ export default function QuickAddSheet({ onSuccess, onBack }: QuickAddSheetProps)
         amount: parsedAmount,
         categoryId,
         date: new Date().toISOString(),
-        // source: 'QUICK_ADD' handled by backend default if we add it
       })
 
       // Success: reset and close
@@ -105,9 +135,7 @@ export default function QuickAddSheet({ onSuccess, onBack }: QuickAddSheetProps)
         <label className="text-xs text-[var(--color-label-secondary)] mb-2 block uppercase tracking-wide">
           Monto
         </label>
-        <div
-          className="flex items-center gap-2 bg-[var(--color-surface-quaternary)] rounded-[var(--radius-md)] px-4 py-4"
-        >
+        <div className="flex items-center gap-2 bg-[var(--color-surface-quaternary)] rounded-[var(--radius-md)] px-4 py-4">
           <span className="text-xl text-[var(--color-label-secondary)]">$</span>
           <input
             type="number"
@@ -131,10 +159,13 @@ export default function QuickAddSheet({ onSuccess, onBack }: QuickAddSheetProps)
         )}
       </div>
 
-      {/* Category grid */}
+      {/* Category grid - sorted by usage */}
       <div className="mb-5">
         <label className="text-xs text-[var(--color-label-secondary)] mb-2 block uppercase tracking-wide">
           Categoría
+          <span className="ml-1 normal-case tracking-normal text-[10px]">
+            (ordenadas por uso)
+          </span>
         </label>
         <div className="grid grid-cols-4 gap-2">
           {topCategories.map((cat) => {
@@ -144,20 +175,38 @@ export default function QuickAddSheet({ onSuccess, onBack }: QuickAddSheetProps)
                 key={cat.id}
                 type="button"
                 onClick={() => setCategoryId(cat.id)}
-                className="fab-tap p-2 rounded-[var(--radius-md)] transition-all"
+                className="fab-tap p-2 rounded-[var(--radius-md)] transition-all flex flex-col items-center justify-center min-h-[70px]"
                 style={{
                   background: isSelected ? 'var(--color-accent)' : 'var(--color-surface-quaternary)',
                   color: isSelected ? '#fff' : 'var(--color-label-primary)',
                 }}
               >
-                <div className="text-xl text-center">{cat.icon}</div>
-                <div className="text-[10px] mt-1 truncate text-center" style={{ fontFamily: 'var(--font-heading)' }}>
+                <div className="text-xl">{cat.icon}</div>
+                <div
+                  className="text-[10px] mt-1 truncate w-full text-center leading-tight"
+                  style={{ fontFamily: 'var(--font-heading)' }}
+                >
                   {cat.name}
                 </div>
+                {cat.countThisPeriod > 0 && (
+                  <div
+                    className="text-[9px] mt-0.5 opacity-60"
+                    style={{ fontFamily: 'var(--font-heading)' }}
+                  >
+                    {cat.countThisPeriod}×
+                  </div>
+                )}
               </button>
             )
           })}
         </div>
+
+        {/* Summary of sorting logic for user confidence */}
+        {sortedCategories.length > 0 && (
+          <div className="text-[10px] text-[var(--color-label-secondary)] mt-2 text-center">
+            Mostrando las {Math.min(8, sortedCategories.length)} categorías más usadas del período
+          </div>
+        )}
       </div>
 
       {/* Optional name field */}
