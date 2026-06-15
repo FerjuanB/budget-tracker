@@ -116,7 +116,7 @@ enum BudgetType {
 model OcrScan {
   id           String   @id @default(cuid())
   userId       String
-  imageUrl     String   // Supabase Storage path for receipt
+  imageUrl     String?  // Supabase Storage path (optional — v1 sends base64 only, no image persistence)
   rawResponse  Json     // raw LLM output
   parsed       Json     // normalized {amount, merchant, category_hint, date}
   expenseId    String?  // set when user confirms & creates Expense
