@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { Decimal } from '@prisma/client/runtime/library'
 
-const createRecurringSchema = z.object({
+const recurringBaseSchema = z.object({
   categoryId: z.string().min(1),
   name: z.string().min(1).max(100),
   icon: z.string().max(5).optional(),
@@ -16,7 +16,10 @@ const createRecurringSchema = z.object({
   splitInto: z.number().int().min(1).max(12).optional().default(1),
   splitDayOffset: z.number().int().min(1).max(28).nullable().optional(),
   startDate: z.string().optional(),
-}).refine(
+})
+
+// Create: require valid amount unless isVariable=true
+const createRecurringSchema = recurringBaseSchema.refine(
   (data) => data.isVariable || data.baseAmount > 0,
   {
     message: 'Ingresá un monto válido, o marcá la opción "Monto variable"',
@@ -24,7 +27,8 @@ const createRecurringSchema = z.object({
   }
 )
 
-const updateRecurringSchema = createRecurringSchema.partial()
+// Update: all fields partial, no cross-field validation needed
+const updateRecurringSchema = recurringBaseSchema.partial()
 
 // GET /api/recurring - List all recurring expenses
 // GET /api/recurring?pending=true - List pending instances for current period
