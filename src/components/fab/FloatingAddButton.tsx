@@ -4,7 +4,6 @@ import BottomSheet from './shared/BottomSheet'
 import { useSheetStack } from './shared/useSheetStack'
 import ActionSheet from './ActionSheet'
 import QuickAddSheet from './QuickAddSheet'
-import RecurringSheet from './RecurringSheet'
 
 /**
  * Floating Action Button (FAB) — main entry point for adding expenses.
@@ -13,6 +12,7 @@ import RecurringSheet from './RecurringSheet'
  *   Tap + → Action Sheet (choose type) → Quick Add / OCR / Recurring
  * 
  * Option 2 design (Action Sheet pattern, not radial fan).
+ * Recurring sheet temporarily removed — will be reimplemented later with cron.
  */
 export default function FloatingAddButton() {
   const { current, isOpen, open, push, back, close } = useSheetStack()
@@ -46,11 +46,15 @@ export default function FloatingAddButton() {
         <ActionSheet
           onQuickAdd={() => push('quick')}
           onOcr={() => {
-            // TODO: implement OcrSheet next (Phase D)
-            alert('📷 OCR todavía no disponible — lo hacemos después de los recurrentes.')
+            // TODO: implement OcrSheet (Phase D)
+            alert('📷 OCR próximamente — siguiente feature.')
             back()
           }}
-          onRecurring={() => push('recurring')}
+          onRecurring={() => {
+            // Placeholder — to be reimplemented with cron generation
+            alert('🔁 Recurrentes próximamente — lo hacemos en otra sesión.')
+            back()
+          }}
           onCancel={close}
         />
       </BottomSheet>
@@ -65,15 +69,6 @@ export default function FloatingAddButton() {
           onSuccess={handleQuickAddSuccess}
           onBack={back}
         />
-      </BottomSheet>
-
-      {/* Recurring Sheet */}
-      <BottomSheet
-        isOpen={current === 'recurring'}
-        onClose={back}
-        maxHeight={0.85}
-      >
-        <RecurringSheet onBack={back} />
       </BottomSheet>
     </>
   )
