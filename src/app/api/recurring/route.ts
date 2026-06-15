@@ -8,7 +8,7 @@ const createRecurringSchema = z.object({
   categoryId: z.string().min(1),
   name: z.string().min(1).max(100),
   icon: z.string().max(5).optional(),
-  baseAmount: z.number().positive(),
+  baseAmount: z.number().min(0), // 0 allowed for variable expenses
   isVariable: z.boolean().optional().default(false),
   frequency: z.enum(['MONTHLY', 'BIMONTHLY', 'QUARTERLY', 'YEARLY']).default('MONTHLY'),
   dayOfMonth: z.number().int().min(1).max(28).nullable().optional(),
@@ -16,7 +16,13 @@ const createRecurringSchema = z.object({
   splitInto: z.number().int().min(1).max(12).optional().default(1),
   splitDayOffset: z.number().int().min(1).max(28).nullable().optional(),
   startDate: z.string().optional(),
-})
+}).refine(
+  (data) => data.isVariable || data.baseAmount > 0,
+  {
+    message: 'Ingresá un monto válido, o marcá la opción "Monto variable"',
+    path: ['baseAmount'],
+  }
+)
 
 const updateRecurringSchema = createRecurringSchema.partial()
 

@@ -7,7 +7,7 @@ import { Decimal } from '@prisma/client/runtime/library'
 const updateSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   icon: z.string().max(5).optional().nullable(),
-  baseAmount: z.number().positive().optional(),
+  baseAmount: z.number().min(0).optional(),
   isVariable: z.boolean().optional(),
   categoryId: z.string().optional(),
   frequency: z.enum(['MONTHLY', 'BIMONTHLY', 'QUARTERLY', 'YEARLY']).optional(),

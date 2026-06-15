@@ -89,7 +89,7 @@ export default function RecurringForm({ onSuccess, onCancel }: RecurringFormProp
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Ej: Netflix, Edenor, Visa..."
+          placeholder="Ej: Netflix, EPE, Aguas..."
           className="w-full bg-[var(--color-surface-quaternary)] rounded-[var(--radius-md)] px-4 py-3 outline-none"
           autoFocus
         />
@@ -241,7 +241,7 @@ export default function RecurringForm({ onSuccess, onCancel }: RecurringFormProp
             ))}
           </div>
           <div className="text-[10px] text-[var(--color-label-secondary)] mt-2">
-            Ej: Edenor cada 2 meses con monto dividido en 2 cuotas iguales.
+            Ej: EPE cada 2 meses con monto dividido en 2 cuotas iguales.
           </div>
         </div>
       )}
