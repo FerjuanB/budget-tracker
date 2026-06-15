@@ -119,7 +119,7 @@ export default function BottomSheet({
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        className="absolute bottom-0 left-0 right-0 max-h-[90vh] overflow-y-auto bg-[var(--color-surface-elevated)] rounded-t-[var(--radius-xl)] sheet-handle"
+        className="absolute bottom-0 left-0 right-0 overflow-y-auto bg-[var(--color-surface-elevated)] rounded-t-[var(--radius-xl)]"
         style={{
           maxHeight: `${maxHeight * 100}vh`,
           boxShadow: 'var(--shadow-sheet)',
@@ -130,8 +130,8 @@ export default function BottomSheet({
           WebkitOverflowScrolling: 'touch',
         }}
       >
-        {/* Handle visual */}
-        <div className="sheet-handle" />
+        {/* Handle visual bar (drag cue) */}
+        <div className="sheet-handle-bar" />
         {/* Content */}
         <div className="pb-[max(env(safe-area-inset-bottom),24px)] px-5">
           {children}
