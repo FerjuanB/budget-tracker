@@ -129,12 +129,15 @@ export default function BudgetTracker({ selectedPeriod }: BudgetTrackerProps) {
           </div>
           <div 
             className="text-[52px] font-bold leading-none amount"
-            style={{ letterSpacing: '-0.03em' }}
+            style={{ 
+              letterSpacing: '-0.03em',
+              color: summary.remainingBudget < 0 ? '#B34A3C' : '#2D4A3E',
+            }}
           >
             ${summary.remainingBudget.toLocaleString('es-AR')}
           </div>
-          <div className="text-[var(--color-label-secondary)] text-sm mt-1">
-            de <strong className="text-[var(--color-label-primary)] font-semibold">
+          <div className="text-[var(--color-label-tertiary)] text-sm mt-1">
+            de <strong className="text-[var(--color-label-secondary)] font-semibold">
               ${summary.totalBudget.toLocaleString('es-AR')}
             </strong>
           </div>
@@ -203,9 +206,23 @@ export default function BudgetTracker({ selectedPeriod }: BudgetTrackerProps) {
           <div className="text-[var(--color-label-secondary)] text-[10px] font-semibold uppercase tracking-wider mb-1">
             Hoy
           </div>
-          <div className="text-xl font-bold amount leading-tight">
+          <div 
+            className="text-xl font-bold amount leading-tight"
+            style={{ color: todaysTotal > (avgDaily * 1.3) ? '#C4782B' : 'var(--color-label-primary)' }}
+          >
             ${todaysTotal.toLocaleString('es-AR')}
           </div>
+          {todaysTotal > 0 && (
+            <div 
+              className="text-[11px] mt-1 font-medium"
+              style={{ 
+                color: todaysTotal > avgDaily ? '#B34A3C' : '#6B8E5F',
+                fontFamily: 'var(--font-heading)',
+              }}
+            >
+              {todaysTotal > avgDaily ? '↑ Más que el promedio' : '↓ Menos que el promedio'}
+            </div>
+          )}
         </div>
 
         <div 
@@ -218,6 +235,17 @@ export default function BudgetTracker({ selectedPeriod }: BudgetTrackerProps) {
           <div className="text-xl font-bold amount leading-tight">
             ${avgDaily.toLocaleString('es-AR')}
           </div>
+          {summary && currentDay > 1 && (
+            <div 
+              className="text-[11px] mt-1 font-medium"
+              style={{ 
+                color: 'var(--color-label-tertiary)',
+                fontFamily: 'var(--font-heading)',
+              }}
+            >
+              sobre {currentDay} días
+            </div>
+          )}
         </div>
       </section>
 

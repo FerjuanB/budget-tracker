@@ -215,9 +215,10 @@ export default function ExpenseList({
             <div
               className="amount truncate"
               style={{
-                fontSize: 13,
-                color: 'var(--color-label-secondary)',
-                maxWidth: '45%', /* prevent long amounts from overflowing */
+                fontSize: 14,
+                color: '#6B8E5F',
+                fontWeight: 700,
+                maxWidth: '45%',
               }}
             >
               ${totalDisplayed.toLocaleString('es-AR')}

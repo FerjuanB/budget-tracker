@@ -60,7 +60,8 @@ export default function ExpenseDetail({ expense, onEdit, onDelete }: ExpenseDeta
         className="amount flex-shrink-0 text-right"
         style={{
           fontSize: 15,
-          color: 'var(--color-label-primary)',
+          color: '#1A1612',
+          fontWeight: 700,
         }}
       >
         ${formatAmount(Number(expense.amount))}
