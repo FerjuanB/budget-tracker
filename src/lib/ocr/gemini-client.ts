@@ -32,9 +32,8 @@ Analizá la imagen del ticket y extraé SOLO estos campos en JSON:
 - date: fecha en formato YYYY-MM-DD (si no está clara, usar null)
 - category_hint: una de [alimentación, transporte, farmacia, vestimenta, hogar, entretenimiento, servicios, educación, otros]
 - currency: "ARS" (salvo que sea claramente otra moneda)
-- raw_text: texto completo del ticket si es legible
 
-Respondé SOLAMENTE JSON válido, sin markdown fences, sin explicaciones adicionales.
+Respondé SOLAMENTE un JSON compacto, sin markdown fences, sin explicaciones, sin raw_text. Keep it short.
 Si no podés leer algún campo, usá null.`
 
 export async function analyzeReceiptImage(
@@ -71,8 +70,9 @@ export async function analyzeReceiptImage(
     ],
     generationConfig: {
       temperature: 0.1,
-      maxOutputTokens: 1024,
+      maxOutputTokens: 4096, // generous — gemini-2.5 is a thinking model, budget includes thinking tokens
       responseMimeType: 'application/json', // force JSON output
+      thinkingConfig: { thinkingBudget: 0 }, // disable thinking for OCR (faster + no budget waste)
     },
   }
 
@@ -184,9 +184,36 @@ function parseGeminiResponse(resultText: string): OcrParsedData {
       date: parsed.date ?? null,
       category_hint: parsed.category_hint ?? null,
       currency: parsed.currency ?? 'ARS',
-      raw_text: parsed.raw_text ?? undefined,
     }
   } catch (parseError) {
+    // Fallback: try to extract fields from truncated JSON
+    // Gemini may cut off the output if the response is long
+    console.warn('[Gemini OCR] JSON truncated, attempting partial recovery:', cleanedText.slice(0, 100))
+
+    const extractString = (key: string): string | null => {
+      const m = cleanedText.match(new RegExp(`"${key}"\\s*:\\s*"([^"]*)"`, 's'))
+      return m ? m[1].trim() : null
+    }
+
+    const extractNumber = (key: string): number | null => {
+      const m = cleanedText.match(new RegExp(`"${key}"\\s*:\\s*([\\d.]+)`, 's'))
+      return m ? parseFloat(m[1]) : null
+    }
+
+    const amount = extractNumber('amount')
+    const merchant = extractString('merchant')
+
+    if (amount !== null || merchant !== null) {
+      console.log('[Gemini OCR] Partial recovery succeeded:', { amount, merchant })
+      return {
+        amount,
+        merchant,
+        date: extractString('date'),
+        category_hint: extractString('category_hint'),
+        currency: extractString('currency') ?? 'ARS',
+      }
+    }
+
     console.error('[Gemini OCR Parse Error]', { cleanedText, parseError })
     throw new Error('Gemini devolvió una respuesta inválida. Probá de nuevo.')
   }
