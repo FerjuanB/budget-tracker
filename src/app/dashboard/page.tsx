@@ -177,9 +177,7 @@ export default function DashboardPage() {
 
           {/* Budget Tracker */}
           {hasBudget ? (
-            <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-              <BudgetTracker />
-            </div>
+            <BudgetTracker />
           ) : (
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
               <div className="flex items-start gap-4">
