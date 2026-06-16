@@ -97,6 +97,7 @@ export default function FloatingAddButton({
         <OcrSheet
           onSuccess={handleSuccess}
           onBack={back}
+          onFallbackToManual={() => push('quick')}
         />
       </BottomSheet>
     </>

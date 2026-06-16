@@ -7,19 +7,17 @@ import { useAnalyzeReceipt, useConfirmOcrScan, OcrParsedData } from '@/hooks/use
 interface OcrSheetProps {
   onSuccess?: () => void
   onBack?: () => void
+  /** Called when user taps "Cargar manual" fallback → navigates to QuickAdd */
+  onFallbackToManual?: () => void
 }
 
-type Stage = 'select' | 'analyzing' | 'preview' | 'error'
+type Stage = 'select' | 'compressing' | 'analyzing' | 'preview' | 'error'
 
-/**
- * Convert a File to base64 string (without the data:... prefix).
- */
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
     reader.onload = () => {
       const result = reader.result as string
-      // Strip the data:mime/type;base64, prefix
       const base64 = result.split(',')[1]
       resolve(base64)
     }
@@ -29,8 +27,41 @@ function fileToBase64(file: File): Promise<string> {
 }
 
 /**
+ * Resize an image file to max 1600px on the longest side and JPEG quality 0.8.
+ * This typically reduces file size by 70-90% — important for mobile uploads
+ * where photos can be 8-12MB. Gemini doesn't need 12MP to read text.
+ */
+async function compressImage(file: File, maxDim = 1600, quality = 0.8): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => {
+      try {
+        let { width, height } = img
+        const scale = Math.min(1, maxDim / Math.max(width, height))
+        width = Math.round(width * scale)
+        height = Math.round(height * scale)
+
+        const canvas = document.createElement('canvas')
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')
+        if (!ctx) throw new Error('Canvas no disponible')
+        ctx.drawImage(img, 0, 0, width, height)
+
+        const dataUrl = canvas.toDataURL('image/jpeg', quality)
+        const base64 = dataUrl.split(',')[1]
+        resolve(base64)
+      } catch (err) {
+        reject(err)
+      }
+    }
+    img.onerror = () => reject(new Error('No se pudo leer la imagen'))
+    img.src = URL.createObjectURL(file)
+  })
+}
+
+/**
  * Fuzzy-match Gemini's category_hint to the user's existing categories.
- * Returns category id or empty string if no match.
  */
 function matchCategoryFromHint(
   hint: string | null,
@@ -39,11 +70,9 @@ function matchCategoryFromHint(
   if (!hint) return ''
   const normalized = hint.toLowerCase().trim()
 
-  // Direct name match (case-insensitive)
   const direct = categories.find((c) => c.name.toLowerCase() === normalized)
   if (direct) return direct.id
 
-  // Partial match: either contains the other
   const partial = categories.find(
     (c) =>
       c.name.toLowerCase().includes(normalized) ||
@@ -51,7 +80,6 @@ function matchCategoryFromHint(
   )
   if (partial) return partial.id
 
-  // Synonyms for Argentine common categories
   const synonymMap: Record<string, string[]> = {
     alimentación: ['comida', 'supermercado', 'almacén', 'kiosco', 'panadería'],
     transporte: ['nafta', 'combustible', 'subte', 'colectivo', 'taxi', 'uber'],
@@ -76,15 +104,17 @@ function matchCategoryFromHint(
 
 /**
  * OCR Sheet: upload image → Gemini analyzes → user previews & confirms → Expense created.
- * 
+ *
  * Flow:
- *   1. select: user picks/takes photo
- *   2. analyzing: spinner while Gemini works
- *   3. preview: editable form with pre-filled data + Confirm button
- *   4. error: shown if Gemini fails (with fallback to manual)
+ *   1. select: user picks/takes photo (2 buttons: camera or gallery)
+ *   2. compressing: resize image locally (fast)
+ *   3. analyzing: spinner while Gemini works remotely
+ *   4. preview: editable form with pre-filled data + Confirm button
+ *   5. error: shown if anything fails (with fallback to manual entry)
  */
-export default function OcrSheet({ onSuccess, onBack }: OcrSheetProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null)
+export default function OcrSheet({ onSuccess, onBack, onFallbackToManual }: OcrSheetProps) {
+  const cameraInputRef = useRef<HTMLInputElement>(null)
+  const galleryInputRef = useRef<HTMLInputElement>(null)
   const { data: categories } = useCategories()
   const { data: currentPeriod } = useCurrentPeriod()
 
@@ -93,24 +123,23 @@ export default function OcrSheet({ onSuccess, onBack }: OcrSheetProps) {
 
   const [stage, setStage] = useState<Stage>('select')
   const [error, setError] = useState('')
+  const [errorDetail, setErrorDetail] = useState('')
   const [ocrScanId, setOcrScanId] = useState('')
   const [parsed, setParsed] = useState<OcrParsedData | null>(null)
 
-  // Editable fields (prefilled from parsed + editable)
   const [amount, setAmount] = useState('')
   const [merchant, setMerchant] = useState('')
   const [categoryId, setCategoryId] = useState('')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
 
-  // Reset on mount
   useEffect(() => {
     setStage('select')
     setError('')
+    setErrorDetail('')
     setOcrScanId('')
     setParsed(null)
   }, [])
 
-  // Prefill form fields when parsed data arrives
   useEffect(() => {
     if (parsed && categories) {
       if (parsed.amount) setAmount(parsed.amount.toString())
@@ -122,26 +151,71 @@ export default function OcrSheet({ onSuccess, onBack }: OcrSheetProps) {
   }, [parsed, categories])
 
   const handleFile = async (file: File) => {
+    // Basic type check
+    if (!file.type.startsWith('image/')) {
+      setError('Archivo no válido')
+      setErrorDetail(`Se esperaba una imagen, recibimos: ${file.type || 'desconocido'}`)
+      setStage('error')
+      return
+    }
+
+    // Guardrail: reject files > 20MB (likely a video)
+    if (file.size > 20 * 1024 * 1024) {
+      setError('Imagen muy grande')
+      setErrorDetail(`El archivo pesa ${(file.size / 1024 / 1024).toFixed(1)}MB. Usá una foto clara del ticket (menos de 5MB).`)
+      setStage('error')
+      return
+    }
+
     setError('')
-    setStage('analyzing')
+    setErrorDetail('')
+    setStage('compressing')
+
     try {
-      const imageBase64 = await fileToBase64(file)
+      const imageBase64 = await compressImage(file)
+
+      setStage('analyzing')
       const result = await analyzeMutation.mutateAsync({
         imageBase64,
-        mimeType: file.type || 'image/jpeg',
+        mimeType: 'image/jpeg', // compression always produces jpeg
       })
+
+      // Guardrail: parsed must have at least an amount
+      if (!result.parsed?.amount || result.parsed.amount <= 0) {
+        setError('No pudimos detectar el monto')
+        setErrorDetail('Gemini procesó la imagen pero no encontró un total claro. Probá con una foto más nítida, bien iluminada y sin reflejos.')
+        setStage('error')
+        return
+      }
+
       setOcrScanId(result.ocrScanId)
       setParsed(result.parsed)
       setStage('preview')
     } catch (err: any) {
-      setError(err.message || 'Error al analizar la imagen')
+      console.error('OCR error:', err)
+      const msg = err?.message || 'Error desconocido'
+      const isNetwork = msg.includes('fetch') || msg.includes('network') || msg.includes('Failed to fetch')
+      const isTimeout = msg.includes('timeout') || msg.includes('Timeout')
+
+      if (isNetwork || isTimeout) {
+        setError('Problema de conexión')
+        setErrorDetail('Revisá tu internet e intentá de vuelta. Si persiste, cargalo manual.')
+      } else if (msg.includes('401') || msg.includes('403')) {
+        setError('Error de configuración')
+        setErrorDetail('La API de Gemini no tiene permisos. Avisá al administrador.')
+      } else if (msg.includes('500') || msg.includes('503')) {
+        setError('Gemini está saturado')
+        setErrorDetail('El servicio de IA rechazó el pedido. Probá en unos segundos o cargá el ticket manual.')
+      } else {
+        setError('No pudimos leer el ticket')
+        setErrorDetail(`${msg}. Probá con otra foto más nítida o cargá manual.`)
+      }
       setStage('error')
     }
   }
 
-  const triggerPick = () => {
-    fileInputRef.current?.click()
-  }
+  const triggerCamera = () => cameraInputRef.current?.click()
+  const triggerGallery = () => galleryInputRef.current?.click()
 
   const canSubmit =
     ocrScanId &&
@@ -166,6 +240,16 @@ export default function OcrSheet({ onSuccess, onBack }: OcrSheetProps) {
       onSuccess?.()
     } catch (err: any) {
       setError(err.message || 'Error al confirmar')
+      setErrorDetail('')
+      setStage('error')
+    }
+  }
+
+  const handleManualFallback = () => {
+    if (onFallbackToManual) {
+      onFallbackToManual()
+    } else {
+      onBack?.()
     }
   }
 
@@ -187,19 +271,34 @@ export default function OcrSheet({ onSuccess, onBack }: OcrSheetProps) {
       </div>
 
       <h2 className="heading text-[22px] mb-4 flex items-center gap-2">
-        <span>📷</span>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#C4782B' }}>
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+          <circle cx="12" cy="13" r="4"/>
+        </svg>
         <span>Foto del ticket</span>
       </h2>
 
-      {/* Hidden file input */}
+      {/* Two hidden inputs: camera (with capture) and gallery (without capture) */}
       <input
-        ref={fileInputRef}
+        ref={cameraInputRef}
         type="file"
         accept="image/*"
         capture="environment"
         onChange={(e) => {
           const file = e.target.files?.[0]
           if (file) handleFile(file)
+          e.target.value = '' // reset para poder seleccionar el mismo archivo otra vez
+        }}
+        className="hidden"
+      />
+      <input
+        ref={galleryInputRef}
+        type="file"
+        accept="image/*"
+        onChange={(e) => {
+          const file = e.target.files?.[0]
+          if (file) handleFile(file)
+          e.target.value = ''
         }}
         className="hidden"
       />
@@ -207,26 +306,101 @@ export default function OcrSheet({ onSuccess, onBack }: OcrSheetProps) {
       {/* STAGE: select */}
       {stage === 'select' && (
         <div className="space-y-3">
+          {/* Camera button */}
           <button
-            onClick={triggerPick}
-            className="fab-tap w-full p-6 rounded-[var(--radius-lg)] bg-[var(--color-surface-quaternary)] border-2 border-dashed border-[var(--color-label-quaternary)] text-left"
+            onClick={triggerCamera}
+            className="fab-tap w-full p-5 rounded-[var(--radius-lg)] text-left flex items-center gap-4"
+            style={{
+              background: 'rgba(196, 120, 43, 0.10)',
+              border: '1px solid rgba(196, 120, 43, 0.25)',
+            }}
           >
-            <div className="text-center">
-              <div className="text-5xl mb-3">📸</div>
-              <div className="font-semibold mb-1" style={{ fontFamily: 'var(--font-heading)' }}>
-                Tomar foto o elegir imagen
+            <div
+              className="flex items-center justify-center flex-shrink-0"
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: 'var(--radius-md)',
+                background: '#C4782B',
+                color: '#fff',
+              }}
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+            </div>
+            <div className="flex-1">
+              <div className="font-semibold" style={{ fontFamily: 'var(--font-heading)', color: '#C4782B' }}>
+                Tomar foto
               </div>
-              <div className="text-xs text-[var(--color-label-secondary)]">
-                Acepta tickets, facturas, comprobantes
+              <div className="text-xs" style={{ color: 'var(--color-label-secondary)' }}>
+                Abrí la cámara del celular
               </div>
             </div>
+            <div style={{ color: '#C4782B', fontSize: 22 }}>›</div>
           </button>
 
-          <div className="p-3 rounded-[var(--radius-md)] bg-[var(--color-accent)]10 border border-[var(--color-accent)]20">
-            <div className="text-[11px] text-[var(--color-label-secondary)] leading-relaxed">
-              💡 Gemini detecta: monto, comercio, fecha y categoría sugerida.
-              Siempre confirmás/editás antes de guardar.
+          {/* Gallery button */}
+          <button
+            onClick={triggerGallery}
+            className="fab-tap w-full p-5 rounded-[var(--radius-lg)] text-left flex items-center gap-4"
+            style={{
+              background: 'var(--color-surface-quaternary)',
+              border: '1px solid var(--color-separator)',
+            }}
+          >
+            <div
+              className="flex items-center justify-center flex-shrink-0"
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: 'var(--radius-md)',
+                background: 'var(--color-label-secondary)',
+                color: '#fff',
+              }}
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
             </div>
+            <div className="flex-1">
+              <div className="font-semibold" style={{ fontFamily: 'var(--font-heading)', color: 'var(--color-label-primary)' }}>
+                Elegir de la galería
+              </div>
+              <div className="text-xs" style={{ color: 'var(--color-label-secondary)' }}>
+                Subí una foto ya tomada
+              </div>
+            </div>
+            <div style={{ color: 'var(--color-label-secondary)', fontSize: 22 }}>›</div>
+          </button>
+
+          <div
+            className="p-3 rounded-[var(--radius-md)]"
+            style={{
+              background: 'rgba(45, 74, 62, 0.08)',
+              border: '1px solid rgba(45, 74, 62, 0.18)',
+            }}
+          >
+            <div className="text-[11px] leading-relaxed" style={{ color: 'var(--color-label-secondary)' }}>
+              💡 Gemini detecta monto, comercio, fecha y categoría.
+              Siempre confirmás o editás antes de guardar.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* STAGE: compressing */}
+      {stage === 'compressing' && (
+        <div className="py-12 text-center">
+          <div className="inline-block w-12 h-12 border-4 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin mb-4" />
+          <div className="font-semibold" style={{ fontFamily: 'var(--font-heading)' }}>
+            Preparando imagen...
+          </div>
+          <div className="text-xs mt-1" style={{ color: 'var(--color-label-secondary)' }}>
+            Optimizando la foto (1-2 segundos)
           </div>
         </div>
       )}
@@ -238,7 +412,7 @@ export default function OcrSheet({ onSuccess, onBack }: OcrSheetProps) {
           <div className="font-semibold" style={{ fontFamily: 'var(--font-heading)' }}>
             Analizando ticket...
           </div>
-          <div className="text-xs text-[var(--color-label-secondary)] mt-1">
+          <div className="text-xs mt-1" style={{ color: 'var(--color-label-secondary)' }}>
             Gemini está leyendo el ticket (5-10 segundos)
           </div>
         </div>
@@ -247,29 +421,48 @@ export default function OcrSheet({ onSuccess, onBack }: OcrSheetProps) {
       {/* STAGE: error */}
       {stage === 'error' && (
         <div className="space-y-3">
-          <div className="p-4 rounded-[var(--radius-md)] bg-[var(--color-destructive)]10 border border-[var(--color-destructive)]30">
-            <div className="font-semibold text-[var(--color-destructive)] mb-1" style={{ fontFamily: 'var(--font-heading)' }}>
-              No pudimos leer el ticket
+          <div
+            className="p-4 rounded-[var(--radius-md)]"
+            style={{
+              background: 'rgba(179, 74, 60, 0.08)',
+              border: '1px solid rgba(179, 74, 60, 0.25)',
+            }}
+          >
+            <div
+              className="font-semibold mb-2 flex items-center gap-2"
+              style={{ fontFamily: 'var(--font-heading)', color: '#B34A3C' }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+              {error}
             </div>
-            <div className="text-xs text-[var(--color-label-secondary)]">{error}</div>
+            {errorDetail && (
+              <div className="text-xs" style={{ color: 'var(--color-label-secondary)', lineHeight: '1.5' }}>
+                {errorDetail}
+              </div>
+            )}
           </div>
 
           <div className="flex gap-2">
             <button
-              onClick={triggerPick}
-              className="flex-1 py-3 rounded-[var(--radius-md)] font-medium"
+              onClick={() => setStage('select')}
+              className="flex-1 py-3 rounded-[var(--radius-md)] font-medium font-heading"
               style={{
                 background: 'var(--color-surface-quaternary)',
+                color: 'var(--color-label-primary)',
                 fontFamily: 'var(--font-heading)',
               }}
             >
               Reintentar
             </button>
             <button
-              onClick={onBack}
-              className="flex-1 py-3 rounded-[var(--radius-md)] font-medium"
+              onClick={handleManualFallback}
+              className="flex-1 py-3 rounded-[var(--radius-md)] font-medium text-white"
               style={{
-                background: 'var(--color-surface-quaternary)',
+                background: 'var(--color-accent)',
                 fontFamily: 'var(--font-heading)',
               }}
             >
@@ -282,17 +475,17 @@ export default function OcrSheet({ onSuccess, onBack }: OcrSheetProps) {
       {/* STAGE: preview (edit + confirm) */}
       {stage === 'preview' && parsed && (
         <div className="space-y-4">
-          <div className="text-[11px] text-[var(--color-label-secondary)] text-center mb-2">
+          <div className="text-[11px] text-center mb-2" style={{ color: 'var(--color-label-secondary)' }}>
             Datos detectados · podés editarlos antes de confirmar
           </div>
 
           {/* Amount */}
           <div>
-            <label className="text-xs text-[var(--color-label-secondary)] mb-2 block uppercase tracking-wide">
+            <label className="text-xs mb-2 block uppercase tracking-wide" style={{ color: 'var(--color-label-secondary)' }}>
               Monto
             </label>
             <div className="flex items-center gap-2 bg-[var(--color-surface-quaternary)] rounded-[var(--radius-md)] px-4 py-3">
-              <span className="text-xl text-[var(--color-label-secondary)]">$</span>
+              <span className="text-xl" style={{ color: 'var(--color-label-secondary)' }}>$</span>
               <input
                 type="number"
                 inputMode="decimal"
@@ -312,7 +505,7 @@ export default function OcrSheet({ onSuccess, onBack }: OcrSheetProps) {
 
           {/* Merchant */}
           <div>
-            <label className="text-xs text-[var(--color-label-secondary)] mb-2 block uppercase tracking-wide">
+            <label className="text-xs mb-2 block uppercase tracking-wide" style={{ color: 'var(--color-label-secondary)' }}>
               Comercio
             </label>
             <input
@@ -326,7 +519,7 @@ export default function OcrSheet({ onSuccess, onBack }: OcrSheetProps) {
 
           {/* Date */}
           <div>
-            <label className="text-xs text-[var(--color-label-secondary)] mb-2 block uppercase tracking-wide">
+            <label className="text-xs mb-2 block uppercase tracking-wide" style={{ color: 'var(--color-label-secondary)' }}>
               Fecha
             </label>
             <input
@@ -339,7 +532,7 @@ export default function OcrSheet({ onSuccess, onBack }: OcrSheetProps) {
 
           {/* Category */}
           <div>
-            <label className="text-xs text-[var(--color-label-secondary)] mb-2 block uppercase tracking-wide">
+            <label className="text-xs mb-2 block uppercase tracking-wide" style={{ color: 'var(--color-label-secondary)' }}>
               Categoría
             </label>
             <select
@@ -355,12 +548,6 @@ export default function OcrSheet({ onSuccess, onBack }: OcrSheetProps) {
               ))}
             </select>
           </div>
-
-          {error && (
-            <div className="text-xs text-[var(--color-destructive)] bg-[var(--color-destructive)]10 p-3 rounded-[var(--radius-sm)]">
-              {error}
-            </div>
-          )}
 
           {/* Confirm button */}
           <button
