@@ -128,7 +128,7 @@ export function CategoryIcon({ categoryName, categoryColor, size = 40 }: Categor
   
   return (
     <div
-      className="flex items-center justify-center flex-shrink-0"
+      className="category-icon flex items-center justify-center flex-shrink-0"
       style={{
         width: size,
         height: size,

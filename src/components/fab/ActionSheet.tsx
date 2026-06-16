@@ -3,7 +3,7 @@
 import { ReactNode } from 'react'
 
 interface ActionCardProps {
-  icon: string
+  icon: ReactNode
   iconBg: string
   iconColor: string
   title: string
@@ -36,7 +36,7 @@ function ActionCard({
       }}
     >
       <div
-        className="w-12 h-12 rounded-[var(--radius-md)] flex items-center justify-center text-2xl"
+        className="w-12 h-12 rounded-[var(--radius-md)] flex items-center justify-center"
         style={{ background: iconColor, color: '#fff' }}
       >
         {icon}
@@ -45,7 +45,7 @@ function ActionCard({
         <div className="font-semibold" style={{ color: iconColor, fontFamily: 'var(--font-heading)' }}>
           {title}
         </div>
-        <div className="text-xs mt-0.5" style={{ color: '#666' }}>
+        <div className="text-xs mt-0.5" style={{ color: 'var(--color-label-secondary)' }}>
           {description}
         </div>
       </div>
@@ -57,7 +57,7 @@ function ActionCard({
 interface ActionSheetProps {
   onQuickAdd: () => void
   onOcr: () => void
-  onRecurring: () => void
+  onBudget: () => void
   onCancel: () => void
 }
 
@@ -65,7 +65,7 @@ interface ActionSheetProps {
  * First bottom-sheet that appears when tapping the FAB.
  * Three big colored cards describing what the user wants to add.
  */
-export default function ActionSheet({ onQuickAdd, onOcr, onRecurring, onCancel }: ActionSheetProps) {
+export default function ActionSheet({ onQuickAdd, onOcr, onBudget, onCancel }: ActionSheetProps) {
   return (
     <div className="px-1 pb-4">
       <h2 className="heading text-[22px] mb-1">¿Qué querés agregar?</h2>
@@ -73,7 +73,11 @@ export default function ActionSheet({ onQuickAdd, onOcr, onRecurring, onCancel }
 
       <div className="space-y-3">
         <ActionCard
-          icon="⚡"
+          icon={
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+            </svg>
+          }
           iconBg="#34c75912"
           iconColor="#34c759"
           title="Gasto rápido"
@@ -83,7 +87,12 @@ export default function ActionSheet({ onQuickAdd, onOcr, onRecurring, onCancel }
         />
 
         <ActionCard
-          icon="📷"
+          icon={
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+              <circle cx="12" cy="13" r="4" />
+            </svg>
+          }
           iconBg="#ff950012"
           iconColor="#ff9500"
           title="Foto del ticket"
@@ -92,20 +101,20 @@ export default function ActionSheet({ onQuickAdd, onOcr, onRecurring, onCancel }
           onClick={onOcr}
         />
 
-        {/* Recurring expenses — disabled until cron generation is implemented.
-            Kept in code as placeholder. To re-enable: also uncomment the
-            RecurringSheet import + BottomSheet in FloatingAddButton.tsx and
-            uncomment the onRecurring handler there.
         <ActionCard
-          icon="🔁"
-          iconBg="#af52de12"
-          iconColor="#af52de"
-          title="Gasto recurrente"
-          description="Netflix, Visa, Edenor... agregar automático"
-          accentColor="#af52de"
-          onClick={onRecurring}
+          icon={
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23" />
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+            </svg>
+          }
+          iconBg="#007aff12"
+          iconColor="#007aff"
+          title="Agregar ingreso"
+          description="Sumá presupuesto al período actual"
+          accentColor="#007aff"
+          onClick={onBudget}
         />
-        */}
       </div>
 
       <button

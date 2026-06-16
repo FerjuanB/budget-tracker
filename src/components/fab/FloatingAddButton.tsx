@@ -1,5 +1,7 @@
 'use client'
 
+import { useEffect, useState, ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import BottomSheet from './shared/BottomSheet'
 import { useSheetStack } from './shared/useSheetStack'
 import ActionSheet from './ActionSheet'
@@ -8,35 +10,53 @@ import OcrSheet from './OcrSheet'
 
 /**
  * Floating Action Button (FAB) — main entry point for adding expenses.
- * 
+ *
  * Flow:
- *   Tap + → Action Sheet (choose type) → Quick Add / OCR / Recurring
- * 
- * Option 2 design (Action Sheet pattern, not radial fan).
+ *   Tap + → Action Sheet (3 options) → Quick Add / OCR / Add Budget
+ *
+ * Rendered as a React portal to guarantee visibility regardless of
+ * parent overflow/transform/stacking context issues.
  */
-export default function FloatingAddButton() {
+export default function FloatingAddButton({
+  onAddBudget,
+}: {
+  /** Called when user taps "Agregar presupuesto" in the action sheet. */
+  onAddBudget?: () => void
+}) {
+  const [mounted, setMounted] = useState(false)
   const { current, isOpen, open, push, back, close } = useSheetStack()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleSuccess = () => {
     close()
   }
 
-  return (
+  if (!mounted) return null
+
+  const content = (
     <>
-      {/* The FAB itself */}
-      {/* Positioned 92px from bottom (above BottomNav ~72px + 20px gap) + safe-area */}
+      {/* The FAB button — positioned via CSS in globals.css */}
       <button
         onClick={() => open('actions')}
-        className="fab-tap fixed right-5 z-40 w-14 h-14 rounded-[var(--radius-full)] text-white text-3xl shadow-xl flex items-center justify-center hover:scale-105 transition-transform"
-        style={{
-          bottom: 'calc(92px + env(safe-area-inset-bottom))',
-          background: 'var(--color-accent)',
-          boxShadow: '0 8px 24px rgba(0, 122, 255, 0.35)',
-          fontFamily: 'var(--font-heading)',
-        }}
+        className="fab-tap fab-fixed"
         aria-label="Agregar"
       >
-        +
+        <svg
+          width="28"
+          height="28"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
       </button>
 
       {/* Action Sheet (first level) */}
@@ -48,10 +68,9 @@ export default function FloatingAddButton() {
         <ActionSheet
           onQuickAdd={() => push('quick')}
           onOcr={() => push('ocr')}
-          onRecurring={() => {
-            // Placeholder — to be reimplemented with cron generation
-            alert('🔁 Recurrentes próximamente — lo hacemos en otra sesión.')
-            back()
+          onBudget={() => {
+            close()
+            onAddBudget?.()
           }}
           onCancel={close}
         />
@@ -82,4 +101,6 @@ export default function FloatingAddButton() {
       </BottomSheet>
     </>
   )
+
+  return createPortal(content, document.body)
 }

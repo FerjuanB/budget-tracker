@@ -5,12 +5,12 @@ import { useSession } from 'next-auth/react'
 import { useCurrentPeriod, usePeriods, useExpenses, useBudgetAdditions, useDeleteExpense, useCreatePeriod, Expense, BudgetPeriod } from '@/hooks/useBudgetData'
 import BudgetTracker from '@/components/BudgetTracker'
 import BudgetForm from '@/components/BudgetForm'
-import ExpenseForm from '@/components/ExpenseForm'
 import ExpenseList from '@/components/ExpenseList'
 import FilterByCategory from '@/components/FilterByCategory'
 import ExpenseModal from '@/components/ExpenseModal'
 import PeriodSelector from '@/components/PeriodSelector'
 import FloatingAddButton from '@/components/fab/FloatingAddButton'
+import BottomSheet from '@/components/fab/shared/BottomSheet'
 import BottomNav, { TabKey } from '@/components/BottomNav'
 
 export default function DashboardPage() {
@@ -32,8 +32,6 @@ export default function DashboardPage() {
   // When current period data changes (e.g., after adding budget), refresh the selected period
   useEffect(() => {
     if (currentPeriod && selectedPeriodId === currentPeriod.id) {
-      // Force re-render by resetting selectedPeriodId and setting it back
-      // This ensures we use the updated currentPeriod data
       setSelectedPeriodId(currentPeriod.id)
     }
   }, [currentPeriod?.summary?.totalBudget])
@@ -94,255 +92,192 @@ export default function DashboardPage() {
 
   return (
     <>
-      {/* FAB (floating action button) — main entry for adding expenses */}
-      <FloatingAddButton />
+      {/* FAB (floating action button) — main entry for adding expenses/income */}
+      <FloatingAddButton
+        onAddBudget={() => {
+          if (!isActivePeriod) {
+            alert('No podés agregar ingresos en un período cerrado')
+            return
+          }
+          setShowBudgetForm(true)
+        }}
+      />
 
       {/* ═══════  HOME TAB  ═══════ */}
       {activeTab === 'home' && (
         <>
-          {/* Welcome header */}
-      {/* <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          ¡Bienvenido, {session?.user?.name || 'Usuario'}! 👋
-        </h1>
-        <p className="mt-2 text-gray-600 dark:text-gray-400">
-          Gestiona tu presupuesto y controla tus gastos
-        </p>
-      </div> */}
-
-      {/* No Active Period - Create New Period */}
-      {noActivePeriod ? (
-        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6">
-          <div className="flex items-start gap-4">
-            <div className="flex-shrink-0">
-              <svg
-                className="h-8 w-8 text-yellow-600 dark:text-yellow-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <div className="flex-1">
-              <h3 className="text-xl font-semibold text-yellow-900 dark:text-yellow-100">
-                📅 No hay períodos activos
-              </h3>
-              <p className="mt-2 text-sm text-yellow-800 dark:text-yellow-200">
-                Has cerrado todos tus períodos. Para continuar registrando gastos y presupuestos, necesitas crear un nuevo período activo.
-              </p>
-              <button
-                onClick={handleCreatePeriod}
-                disabled={createPeriodMutation.isPending}
-                className="mt-4 inline-flex items-center px-6 py-3 bg-yellow-600 hover:bg-yellow-700 disabled:bg-yellow-400 text-white rounded-lg font-medium transition-colors gap-2"
-              >
-                {createPeriodMutation.isPending ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Creando...
-                  </>
-                ) : (
-                  <>
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 4v16m8-8H4"
-                      />
-                    </svg>
-                    Crear Nuevo Período
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <>
-          {/* Period Selector */}
-          <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-            <PeriodSelector
-              selectedPeriodId={selectedPeriodId}
-              onPeriodChange={setSelectedPeriodId}
-            />
-          </div>
-
-          {/* Budget Tracker */}
-          {hasBudget ? (
-            <BudgetTracker />
-          ) : (
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0">
-                  <svg
-                    className="h-6 w-6 text-blue-600 dark:text-blue-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100">
-                    Define tu presupuesto
-                  </h3>
-                  <p className="mt-1 text-sm text-blue-800 dark:text-blue-200">
-                    Para comenzar a registrar gastos, primero debes agregar presupuesto a tu período actual.
-                  </p>
-                  {isActivePeriod && (
-                    <button
-                      onClick={() => setShowBudgetForm(!showBudgetForm)}
-                      className="mt-3 inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium transition-colors"
-                    >
-                      {showBudgetForm ? 'Ocultar formulario' : 'Agregar presupuesto'}
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Budget Form (collapsible) - ONLY if ACTIVE period */}
-          {isActivePeriod && (showBudgetForm || !hasBudget) && (
-            <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-              <BudgetForm onSuccess={() => setShowBudgetForm(false)} />
-            </div>
-          )}
-
-          {/* Warning if trying to modify budget in closed period */}
-          {!isActivePeriod && showBudgetForm && (
-            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6">
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0">
-                  <svg
-                    className="h-6 w-6 text-yellow-600 dark:text-yellow-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-yellow-900 dark:text-yellow-100">
-                    ⚠️ Período Cerrado
-                  </h3>
-                  <p className="mt-1 text-sm text-yellow-800 dark:text-yellow-200">
-                    No puedes modificar el presupuesto de un período cerrado. Solo puedes agregar gastos con fechas dentro del período.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Quick Actions */}
-          {hasBudget && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <button
-                onClick={() => {
-                  setExpenseToEdit(null)
-                  setShowExpenseModal(true)
+          {/* No Active Period — Create New Period */}
+          {noActivePeriod ? (
+            <div className="px-5 py-8">
+              <div
+                className="rounded-[var(--radius-lg)] p-6"
+                style={{
+                  background: 'var(--color-surface-elevated)',
+                  border: '1px solid var(--color-warning)',
                 }}
-                className="bg-green-600 hover:bg-green-700 text-white px-6 py-4 rounded-lg font-semibold shadow-sm transition-colors flex items-center justify-center gap-2"
               >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-                Nuevo Gasto
-              </button>
-
-              {isActivePeriod && (
-                <button
-                  onClick={() => setShowBudgetForm(!showBudgetForm)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-lg font-semibold shadow-sm transition-colors flex items-center justify-center gap-2"
-                >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
+                <div className="flex items-start gap-4">
+                  <div
+                    className="flex items-center justify-center flex-shrink-0"
+                    style={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: 'var(--radius-md)',
+                      background: 'var(--color-warning)',
+                      color: '#fff',
+                    }}
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                    />
-                  </svg>
-                  {showBudgetForm ? 'Ocultar Presupuesto' : 'Agregar Presupuesto'}
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Expenses Section */}
-          {hasBudget && (
-            <div className="space-y-4">
-              {/* Filter pills with add-income button */}
-              <FilterByCategory
-                selectedCategory={filteredCategory}
-                onFilterChange={setFilteredCategory}
-                onAddIncome={() => setShowBudgetForm(!showBudgetForm)}
-              />
-
-              {/* Expense List */}
-              <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-                <ExpenseList
-                  expenses={expenses || []}
-                  budgetAdditions={budgetAdditions || []}
-                  isLoading={loadingExpenses || loadingBudgets}
-                  filteredCategory={filteredCategory}
-                  onEditExpense={handleEditExpense}
-                  onDeleteExpense={handleDeleteExpense}
-                />
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                      <line x1="16" y1="2" x2="16" y2="6"/>
+                      <line x1="8" y1="2" x2="8" y2="6"/>
+                      <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h3
+                      className="heading text-lg mb-1"
+                      style={{ color: 'var(--color-label-primary)' }}
+                    >
+                      No hay períodos activos
+                    </h3>
+                    <p
+                      className="text-sm leading-relaxed mb-4"
+                      style={{ color: 'var(--color-label-secondary)' }}
+                    >
+                      Has cerrado todos tus períodos. Para continuar registrando gastos, creá un nuevo período.
+                    </p>
+                    <button
+                      onClick={handleCreatePeriod}
+                      disabled={createPeriodMutation.isPending}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[var(--radius-md)] font-semibold text-white disabled:opacity-50 transition-transform active:scale-95"
+                      style={{
+                        background: 'var(--color-accent)',
+                        fontFamily: 'var(--font-heading)',
+                        fontSize: 14,
+                      }}
+                    >
+                      {createPeriodMutation.isPending ? 'Creando...' : 'Crear nuevo período'}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
-          )}
+          ) : (
+            <>
+              {/* Period Selector — minimal, no wrapper card */}
+              <div className="px-5 pt-2 pb-1">
+                <PeriodSelector
+                  selectedPeriodId={selectedPeriodId}
+                  onPeriodChange={setSelectedPeriodId}
+                />
+              </div>
 
-          {/* Expense Modal */}
-          <ExpenseModal
-            isOpen={showExpenseModal}
-            onClose={handleCloseModal}
-            expenseToEdit={expenseToEdit}
-            selectedPeriod={selectedPeriod}
-          />
-        </>
-      )}
+              {/* Budget Tracker (hero + stats) */}
+              {hasBudget ? (
+                <BudgetTracker />
+              ) : (
+                <div className="px-5 py-6">
+                  <div
+                    className="rounded-[var(--radius-lg)] p-5 text-center"
+                    style={{
+                      background: 'var(--color-surface-elevated)',
+                      boxShadow: 'var(--shadow-sm)',
+                    }}
+                  >
+                    <p
+                      className="heading text-base mb-1"
+                      style={{ color: 'var(--color-label-primary)' }}
+                    >
+                      Definí tu presupuesto
+                    </p>
+                    <p
+                      className="text-sm mb-4"
+                      style={{ color: 'var(--color-label-secondary)' }}
+                    >
+                      Agregá ingresos para empezar a registrar gastos
+                    </p>
+                    {isActivePeriod && (
+                      <button
+                        onClick={() => setShowBudgetForm(true)}
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[var(--radius-md)] text-white font-semibold transition-transform active:scale-95"
+                        style={{
+                          background: 'var(--color-accent)',
+                          fontFamily: 'var(--font-heading)',
+                          fontSize: 14,
+                        }}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="12" y1="5" x2="12" y2="19"/>
+                          <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        Agregar ingreso
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Warning if trying to modify budget in closed period */}
+              {!isActivePeriod && (
+                <div className="px-5 pb-4">
+                  <div
+                    className="rounded-[var(--radius-lg)] p-5"
+                    style={{
+                      background: 'rgba(255, 149, 0, 0.08)',
+                      border: '1px solid rgba(255, 149, 0, 0.2)',
+                    }}
+                  >
+                    <p
+                      className="heading text-sm mb-1"
+                      style={{ color: 'var(--color-warning)' }}
+                    >
+                      Período cerrado
+                    </p>
+                    <p
+                      className="text-xs"
+                      style={{ color: 'var(--color-label-secondary)' }}
+                    >
+                      No podés modificar el presupuesto de un período cerrado.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Expenses Section */}
+              {hasBudget && (
+                <div className="space-y-2">
+                  {/* Filter pills with add-income button */}
+                  <FilterByCategory
+                    selectedCategory={filteredCategory}
+                    onFilterChange={setFilteredCategory}
+                    onAddIncome={() => {
+                      if (!isActivePeriod) return
+                      setShowBudgetForm(true)
+                    }}
+                  />
+
+                  {/* Expense List */}
+                  <ExpenseList
+                    expenses={expenses || []}
+                    budgetAdditions={budgetAdditions || []}
+                    isLoading={loadingExpenses || loadingBudgets}
+                    filteredCategory={filteredCategory}
+                    onEditExpense={handleEditExpense}
+                    onDeleteExpense={handleDeleteExpense}
+                  />
+                </div>
+              )}
+
+              {/* Expense Modal */}
+              <ExpenseModal
+                isOpen={showExpenseModal}
+                onClose={handleCloseModal}
+                expenseToEdit={expenseToEdit}
+                selectedPeriod={selectedPeriod}
+              />
+            </>
+          )}
         </>
       )}
 
@@ -404,6 +339,36 @@ export default function DashboardPage() {
 
       {/* Bottom Navigation */}
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+
+      {/* Budget Form Bottom Sheet — triggered from FAB "Agregar ingreso" */}
+      <BottomSheet
+        isOpen={showBudgetForm}
+        onClose={() => setShowBudgetForm(false)}
+        maxHeight={0.9}
+      >
+        <div className="px-1 pb-4">
+          <div className="flex items-center justify-between mb-2">
+            <button
+              onClick={() => setShowBudgetForm(false)}
+              className="text-[var(--color-label-secondary)] text-sm"
+              style={{ fontFamily: 'var(--font-heading)' }}
+            >
+              ← Volver
+            </button>
+          </div>
+          <h2 className="heading text-[22px] mb-1 flex items-center gap-2">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--color-accent)' }}>
+              <line x1="12" y1="1" x2="12" y2="23" />
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+            </svg>
+            <span>Agregar ingreso</span>
+          </h2>
+          <p className="text-sm text-[var(--color-label-secondary)] mb-5">
+            Sumá presupuesto al período actual
+          </p>
+          <BudgetForm onSuccess={() => setShowBudgetForm(false)} />
+        </div>
+      </BottomSheet>
     </>
   )
 }

@@ -213,10 +213,11 @@ export default function ExpenseList({
           </div>
           {!isBudgetFilter && filteredExpenses.length > 0 && (
             <div
-              className="amount"
+              className="amount truncate"
               style={{
                 fontSize: 13,
                 color: 'var(--color-label-secondary)',
+                maxWidth: '45%', /* prevent long amounts from overflowing */
               }}
             >
               ${totalDisplayed.toLocaleString('es-AR')}

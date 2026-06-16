@@ -105,6 +105,11 @@
 }
 
 /* ── Base styles ─────────────────────────────────────────── */
+html, body {
+  overflow-x: hidden; /* prevent long numbers/amounts from pushing viewport wider */
+  max-width: 100vw;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -173,6 +178,110 @@ h3 { font-size: 22px; line-height: 28px; }
 }
 .fab-tap:active {
   transform: scale(0.94);
+}
+
+/* ── FAB — fixed to viewport via portal ──────────────────── */
+/* Always visible. Mobile-first, then aligned to content on wider screens. */
+.fab-fixed {
+  /* Positioning */
+  position: fixed;
+  z-index: 40;
+  right: 20px;
+  bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+
+  /* Sizing */
+  width: 56px;
+  height: 56px;
+
+  /* Visual */
+  border: none;
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+  color: white;
+  box-shadow: 0 8px 24px rgba(0, 122, 255, 0.35);
+  cursor: pointer;
+
+  /* Layout */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* Animation */
+  transition: transform var(--duration-fast) var(--ease-spring),
+              box-shadow var(--duration-fast) ease-out;
+}
+
+.fab-fixed:hover {
+  transform: scale(1.05);
+  box-shadow: 0 12px 32px rgba(0, 122, 255, 0.45);
+}
+
+.fab-fixed:active {
+  transform: scale(0.94);
+}
+
+/* Align FAB with container edge on wider screens (container = max-width:500px centered) */
+@media (min-width: 500px) {
+  .fab-fixed {
+    /* 50% - half of max-width (250px) - 24px margin from container edge */
+    right: calc(50% - 250px + 20px);
+    width: 60px;
+    height: 60px;
+  }
+}
+
+/* ── CategoryIcon: expand SVGs to fill container ────────── */
+.category-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* ── Expense Modal: bottom sheet on mobile, dialog on desktop */
+.expense-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.expense-modal-wrapper {
+  position: fixed;
+  inset: 0;
+  z-index: 51;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+}
+
+.expense-modal-content {
+  width: 100%;
+  max-height: 92vh;
+  overflow-y: auto;
+  background: var(--color-surface-elevated);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  padding: 8px 20px calc(24px + env(safe-area-inset-bottom));
+  animation: modal-slide-up var(--duration-normal) var(--ease-spring);
+}
+
+@keyframes modal-slide-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+/* Desktop: centered dialog */
+@media (min-width: 640px) {
+  .expense-modal-wrapper {
+    align-items: center;
+    padding: 16px;
+  }
+  .expense-modal-content {
+    max-width: 500px;
+    border-radius: var(--radius-lg);
+    animation: dialog-appear var(--duration-normal) var(--ease-spring);
+  }
 }
 
 /* ── Dialog appear animation ────────────────────────────── */
