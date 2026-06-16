@@ -1,0 +1,757 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Home Redesign — Budget Tracker</title>
+<link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@800,700,500,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  :root {
+    --color-surface-primary: #ffffff;
+    --color-surface-secondary: #f2f2f7;
+    --color-surface-tertiary: #ffffff;
+    --color-surface-quaternary: rgba(118, 118, 128, 0.08);
+    
+    --color-label-primary: #000000;
+    --color-label-secondary: rgba(60, 60, 67, 0.6);
+    --color-label-tertiary: rgba(60, 60, 67, 0.3);
+    --color-label-quaternary: rgba(60, 60, 67, 0.18);
+    
+    --color-accent: #007aff;
+    --color-success: #34c759;
+    --color-warning: #ff9500;
+    --color-destructive: #ff3b30;
+    --color-purple: #af52de;
+    
+    --color-separator: rgba(60, 60, 67, 0.1);
+    
+    --radius-xs: 6px;
+    --radius-sm: 10px;
+    --radius-md: 14px;
+    --radius-lg: 20px;
+    --radius-xl: 28px;
+    --radius-full: 9999px;
+    
+    --font-heading: "Cabinet Grotesk", "Inter", sans-serif;
+    --font-body: "Inter", -apple-system, sans-serif;
+    
+    --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  
+  body {
+    font-family: var(--font-body);
+    background: var(--color-surface-secondary);
+    color: var(--color-label-primary);
+    -webkit-font-smoothing: antialiased;
+    max-width: 430px;
+    margin: 0 auto;
+    min-height: 100vh;
+    position: relative;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: 100px; /* space for bottom nav */
+  }
+  
+  .amount {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.03em;
+  }
+  
+  .heading {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  
+  /* ── Header ────────────────────────────────────── */
+  .header {
+    padding: 16px 20px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .header-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--color-label-primary);
+  }
+  
+  .header-logo svg {
+    color: var(--color-accent);
+  }
+  
+  .avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #007aff, #5856d6);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: var(--font-heading);
+    cursor: pointer;
+    transition: transform 0.15s var(--ease-spring);
+  }
+  .avatar:active { transform: scale(0.94); }
+  
+  /* ── Hero cards ────────────────────────────────── */
+  .hero {
+    padding: 16px 20px 24px;
+  }
+  
+  .hero-label {
+    font-size: 13px;
+    color: var(--color-label-secondary);
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+  
+  .hero-amount {
+    font-size: 52px;
+    line-height: 1;
+    margin-bottom: 4px;
+    color: var(--color-label-primary);
+  }
+  
+  .hero-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 13px;
+    color: var(--color-label-secondary);
+    margin-top: 2px;
+    margin-bottom: 18px;
+  }
+  
+  .hero-meta strong {
+    color: var(--color-label-primary);
+    font-weight: 600;
+  }
+  
+  /* Segmented progress bar */
+  .segmented-bar {
+    display: flex;
+    gap: 4px;
+    height: 10px;
+    border-radius: 5px;
+    overflow: hidden;
+    background: var(--color-surface-quaternary);
+  }
+  
+  .segment {
+    flex: 1;
+    background: transparent;
+    transition: background 0.3s;
+  }
+  
+  .segment.filled {
+    background: var(--color-success);
+  }
+  
+  .segment.filled.yellow { background: var(--color-warning); }
+  .segment.filled.red { background: var(--color-destructive); }
+  
+  .hero-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 14px;
+    padding: 6px 12px;
+    border-radius: var(--radius-full);
+    background: rgba(52, 199, 89, 0.15);
+    color: var(--color-success);
+    font-size: 12px;
+    font-weight: 600;
+    font-family: var(--font-heading);
+  }
+  .hero-status::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  
+  /* ── Stats row ─────────────────────────────────── */
+  .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 0 20px 16px;
+  }
+  
+  .stat-card {
+    background: var(--color-surface-primary);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  
+  .stat-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--color-label-secondary);
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+  
+  .stat-value {
+    font-size: 20px;
+    line-height: 1.1;
+    color: var(--color-label-primary);
+  }
+  
+  .stat-delta {
+    font-size: 11px;
+    margin-top: 4px;
+    color: var(--color-label-secondary);
+  }
+  
+  .stat-delta.up { color: var(--color-destructive); }
+  .stat-delta.down { color: var(--color-success); }
+  
+  /* ── Filter pills ──────────────────────────────── */
+  .filters {
+    padding: 8px 20px 12px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .filters::-webkit-scrollbar { display: none; }
+  
+  .filters-inner {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .pill {
+    flex-shrink: 0;
+    padding: 8px 14px;
+    border-radius: var(--radius-full);
+    background: var(--color-surface-primary);
+    color: var(--color-label-primary);
+    font-size: 13px;
+    font-weight: 500;
+    font-family: var(--font-heading);
+    border: 1px solid var(--color-separator);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.15s var(--ease-spring);
+    white-space: nowrap;
+  }
+  
+  .pill:active { transform: scale(0.95); }
+  
+  .pill.active {
+    background: var(--color-label-primary);
+    color: var(--color-surface-primary);
+    border-color: var(--color-label-primary);
+  }
+  
+  .pill-count {
+    background: var(--color-surface-quaternary);
+    color: var(--color-label-secondary);
+    padding: 1px 7px;
+    border-radius: var(--radius-full);
+    font-size: 11px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  
+  .pill.active .pill-count {
+    background: rgba(255,255,255,0.2);
+    color: white;
+  }
+  
+  /* ── Expenses list ─────────────────────────────── */
+  .list-section {
+    padding: 0 20px;
+  }
+  
+  .list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 8px 0 12px;
+  }
+  
+  .list-title {
+    font-size: 15px;
+    color: var(--color-label-secondary);
+    font-weight: 600;
+  }
+  
+  .list-total {
+    font-size: 13px;
+    color: var(--color-label-secondary);
+    font-family: var(--font-heading);
+  }
+  
+  .expenses {
+    background: var(--color-surface-primary);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  
+  .expense-row {
+    display: flex;
+    align-items: center;
+    padding: 14px;
+    gap: 12px;
+    border-bottom: 1px solid var(--color-separator);
+    transition: background 0.15s;
+    cursor: pointer;
+  }
+  .expense-row:last-child { border-bottom: none; }
+  .expense-row:active { background: var(--color-surface-quaternary); }
+  
+  .expense-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    /* SVG icons rendered inline instead of emoji */
+  }
+  
+  .expense-icon svg {
+    width: 22px;
+    height: 22px;
+    stroke-width: 1.8;
+  }
+  
+  .expense-info {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .expense-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-label-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .expense-meta {
+    font-size: 12px;
+    color: var(--color-label-secondary);
+    margin-top: 2px;
+  }
+  
+  .expense-amount {
+    font-size: 15px;
+    color: var(--color-label-primary);
+    text-align: right;
+    flex-shrink: 0;
+  }
+  
+  /* ── Bottom nav ────────────────────────────────── */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-width: 430px;
+    margin: 0 auto;
+    background: rgba(249, 249, 249, 0.85);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border-top: 1px solid var(--color-separator);
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+    z-index: 30;
+  }
+  
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 4px 8px;
+    background: none;
+    border: none;
+    color: var(--color-label-secondary);
+    font-size: 10px;
+    font-weight: 500;
+    font-family: var(--font-heading);
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+  
+  .nav-item svg {
+    width: 24px;
+    height: 24px;
+    stroke-width: 1.8;
+  }
+  
+  .nav-item.active {
+    color: var(--color-accent);
+  }
+  
+  .nav-item:active { transform: scale(0.92); }
+  
+  /* ── FAB (floating above bottom nav) ──────────── */
+  .fab {
+    position: fixed;
+    bottom: calc(84px + env(safe-area-inset-bottom));
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--color-accent);
+    color: white;
+    border: none;
+    box-shadow: 0 8px 24px rgba(0, 122, 255, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 35;
+    transition: transform 0.15s var(--ease-spring);
+  }
+  .fab:active { transform: scale(0.94); }
+  .fab svg { width: 28px; height: 28px; stroke-width: 2.2; }
+  
+  /* ── Empty helper ──────────────────────────────── */
+  .toast-demo {
+    position: fixed;
+    bottom: 160px;
+    left: 20px;
+    right: 20px;
+    max-width: 390px;
+    margin: 0 auto;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(20px);
+    color: white;
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s var(--ease-spring);
+    pointer-events: none;
+    z-index: 40;
+  }
+  .toast-demo.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+  .toast-undo {
+    background: none;
+    border: none;
+    color: var(--color-accent);
+    font-weight: 600;
+    font-family: var(--font-heading);
+    cursor: pointer;
+    padding: 4px 8px;
+  }
+  
+  /* Swipe hint */
+  .swipe-hint {
+    text-align: center;
+    font-size: 11px;
+    color: var(--color-label-tertiary);
+    padding: 12px 0 0;
+    font-family: var(--font-heading);
+  }
+</style>
+</head>
+<body>
+
+  <!-- Header: logo + avatar (menu) -->
+  <header class="header">
+    <div class="header-logo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+        <line x1="16" y1="2" x2="16" y2="6"/>
+        <line x1="8" y1="2" x2="8" y2="6"/>
+        <line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+      <span>BTRGHTO</span>
+    </div>
+    <button class="avatar" onclick="alert('Avatar menu: Perfil, Configuración, Cerrar sesión')">FJ</button>
+  </header>
+
+  <!-- Hero: Prominent balance + segmented bar -->
+  <section class="hero">
+    <div class="hero-label">Quedan</div>
+    <div class="hero-amount amount">$312.500</div>
+    <div class="hero-meta">
+      <span>de <strong>$800.000</strong></span>
+      <span>Día 18 de 32</span>
+    </div>
+    
+    <div class="segmented-bar">
+      <!-- 16 segments, first 10 filled based on usage percent (39%) -->
+      <div class="segment filled"></div>
+      <div class="segment filled"></div>
+      <div class="segment filled"></div>
+      <div class="segment filled"></div>
+      <div class="segment filled yellow"></div>
+      <div class="segment"></div>
+      <div class="segment"></div>
+      <div class="segment"></div>
+      <div class="segment"></div>
+      <div class="segment"></div>
+      <div class="segment"></div>
+      <div class="segment"></div>
+      <div class="segment"></div>
+      <div class="segment"></div>
+      <div class="segment"></div>
+      <div class="segment"></div>
+    </div>
+    
+    <div class="hero-status">Vas bien · 39% usado</div>
+  </section>
+
+  <!-- Stats row: two cards -->
+  <section class="stats">
+    <div class="stat-card">
+      <div class="stat-label">Hoy</div>
+      <div class="stat-value amount">$18.450</div>
+      <div class="stat-delta down">↓ Menos que ayer</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Promedio diario</div>
+      <div class="stat-value amount">$17.350</div>
+      <div class="stat-delta up">+12% vs objetivo</div>
+    </div>
+  </section>
+
+  <!-- Filter pills (horizontal scroll, no emoji) -->
+  <section class="filters">
+    <div class="filters-inner">
+      <button class="pill active" onclick="selectPill(this)">
+        Todos <span class="pill-count">23</span>
+      </button>
+      <button class="pill" onclick="selectPill(this)">
+        Alimentación <span class="pill-count">8</span>
+      </button>
+      <button class="pill" onclick="selectPill(this)">
+        Transporte <span class="pill-count">5</span>
+      </button>
+      <button class="pill" onclick="selectPill(this)">
+        Servicios <span class="pill-count">4</span>
+      </button>
+      <button class="pill" onclick="selectPill(this)">
+        Suscripciones <span class="pill-count">3</span>
+      </button>
+      <button class="pill" onclick="selectPill(this)">
+        Salud <span class="pill-count">2</span>
+      </button>
+      <button class="pill" onclick="selectPill(this)">
+        Otros <span class="pill-count">1</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- Expenses list -->
+  <section class="list-section">
+    <div class="list-header">
+      <div class="list-title">Gastos recientes</div>
+      <div class="list-total amount">$133.450</div>
+    </div>
+    
+    <div class="expenses">
+      <div class="expense-row">
+        <div class="expense-icon" style="background: #ff950020; color: #ff9500;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <path d="M16 10a4 4 0 0 1-8 0"/>
+          </svg>
+        </div>
+        <div class="expense-info">
+          <div class="expense-name">Supermercado Día</div>
+          <div class="expense-meta">Alimentación · Hoy, 14:32</div>
+        </div>
+        <div class="expense-amount amount">$18.450</div>
+      </div>
+      
+      <div class="expense-row">
+        <div class="expense-icon" style="background: #af52de20; color: #af52de;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 22v-6h12v6"/>
+            <path d="M3 22V8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v14"/>
+            <path d="M15 14h4a2 2 0 0 1 2 2v6"/>
+            <path d="M7 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          </svg>
+        </div>
+        <div class="expense-info">
+          <div class="expense-name">YPF Av. San Juan</div>
+          <div class="expense-meta">Transporte · Hoy, 09:15</div>
+        </div>
+        <div class="expense-amount amount">$25.000</div>
+      </div>
+      
+      <div class="expense-row">
+        <div class="expense-icon" style="background: #ff3b3020; color: #ff3b30;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+            <line x1="1" y1="10" x2="23" y2="10"/>
+          </svg>
+        </div>
+        <div class="expense-info">
+          <div class="expense-name">Netflix</div>
+          <div class="expense-meta">Suscripciones · Ayer</div>
+        </div>
+        <div class="expense-amount amount">$7.999</div>
+      </div>
+      
+      <div class="expense-row">
+        <div class="expense-icon" style="background: #007aff20; color: #007aff;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-4"/>
+            <polyline points="9 6 12 3 15 6"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+        </div>
+        <div class="expense-info">
+          <div class="expense-name">Edenor</div>
+          <div class="expense-meta">Servicios · Hace 2 días</div>
+        </div>
+        <div class="expense-amount amount">$32.500</div>
+      </div>
+      
+      <div class="expense-row">
+        <div class="expense-icon" style="background: #34c75920; color: #34c759;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+            <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+          </svg>
+        </div>
+        <div class="expense-info">
+          <div class="expense-name">Farmacity</div>
+          <div class="expense-meta">Salud · Hace 3 días</div>
+        </div>
+        <div class="expense-amount amount">$8.500</div>
+      </div>
+    </div>
+    
+    <div class="swipe-hint">Tip: deslizá una fila para editar o borrar</div>
+  </section>
+
+  <!-- FAB -->
+  <button class="fab" onclick="alert('Abre Action Sheet con 2 opciones:\n• Gasto rápido\n• Foto del ticket')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="12" y1="5" x2="12" y2="19"/>
+      <line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+  </button>
+
+  <!-- Bottom navigation -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" onclick="selectTab(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+      <span>Inicio</span>
+    </button>
+    <button class="nav-item" onclick="selectTab(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <polyline points="12 6 12 12 16 14"/>
+      </svg>
+      <span>Historial</span>
+    </button>
+    <button class="nav-item" onclick="selectTab(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="8" y1="6" x2="21" y2="6"/>
+        <line x1="8" y1="12" x2="21" y2="12"/>
+        <line x1="8" y1="18" x2="21" y2="18"/>
+        <line x1="3" y1="6" x2="3.01" y2="6"/>
+        <line x1="3" y1="12" x2="3.01" y2="12"/>
+        <line x1="3" y1="18" x2="3.01" y2="18"/>
+      </svg>
+      <span>Categorías</span>
+    </button>
+  </nav>
+
+  <!-- Toast demo (appears when simulating delete) -->
+  <div class="toast-demo" id="toast">
+    <span>Gasto eliminado</span>
+    <button class="toast-undo">Deshacer</button>
+  </div>
+
+<script>
+  function selectPill(el) {
+    document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    // Simulate filter: show toast
+    showToast(`Filtrando por ${el.innerText.trim().split(/\s+\d/)[0]}`);
+  }
+  
+  function selectTab(el) {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    el.classList.add('active');
+    const label = el.querySelector('span').innerText;
+    if (label !== 'Inicio') {
+      showToast(`Pantalla: ${label} (no implementada en este mockup)`);
+    }
+  }
+  
+  // Simulate swipe-delete by long-press
+  document.querySelectorAll('.expense-row').forEach(row => {
+    let timer;
+    row.addEventListener('touchstart', (e) => {
+      timer = setTimeout(() => {
+        row.style.transition = 'all 0.3s';
+        row.style.transform = 'translateX(-100%)';
+        row.style.opacity = '0';
+        setTimeout(() => row.remove(), 300);
+        showToast('Gasto eliminado');
+      }, 600);
+    });
+    row.addEventListener('touchend', () => clearTimeout(timer));
+    row.addEventListener('touchmove', () => clearTimeout(timer));
+    
+    // For desktop: right-click
+    row.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      row.style.transition = 'all 0.3s';
+      row.style.transform = 'translateX(-100%)';
+      row.style.opacity = '0';
+      setTimeout(() => row.remove(), 300);
+      showToast('Gasto eliminado');
+    });
+  });
+  
+  // Toast logic
+  let toastTimer;
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.querySelector('span').innerText = msg;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+</script>
+</body>
+</html>
