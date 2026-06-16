@@ -307,10 +307,11 @@ export default function DashboardPage() {
           {/* Expenses Section */}
           {hasBudget && (
             <div className="space-y-4">
-              {/* Filter */}
+              {/* Filter pills with add-income button */}
               <FilterByCategory
                 selectedCategory={filteredCategory}
                 onFilterChange={setFilteredCategory}
+                onAddIncome={() => setShowBudgetForm(!showBudgetForm)}
               />
 
               {/* Expense List */}
