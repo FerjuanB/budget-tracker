@@ -84,24 +84,24 @@ export default function BudgetTracker({ selectedPeriod }: BudgetTrackerProps) {
     let text: string
 
     if (summary.remainingBudget < 0) {
-      bgColor = 'rgba(255, 59, 48, 0.15)'
-      textColor = '#ff3b30'
+      bgColor = 'rgba(179, 74, 60, 0.14)'
+      textColor = '#B34A3C'
       text = 'Presupuesto excedido'
     } else if (percentage >= 90) {
-      bgColor = 'rgba(255, 59, 48, 0.15)'
-      textColor = '#ff3b30'
+      bgColor = 'rgba(179, 74, 60, 0.14)'
+      textColor = '#B34A3C'
       text = '¡Cuidado! Casi agotado'
     } else if (percentage >= 75) {
-      bgColor = 'rgba(255, 149, 0, 0.15)'
-      textColor = '#ff9500'
+      bgColor = 'rgba(196, 120, 43, 0.14)'
+      textColor = '#C4782B'
       text = 'Ten precaución'
     } else if (percentage >= 50) {
-      bgColor = 'rgba(52, 199, 89, 0.15)'
-      textColor = '#34c759'
+      bgColor = 'rgba(107, 142, 95, 0.14)'
+      textColor = '#6B8E5F'
       text = 'Vas bien'
     } else {
-      bgColor = 'rgba(52, 199, 89, 0.15)'
-      textColor = '#34c759'
+      bgColor = 'rgba(107, 142, 95, 0.14)'
+      textColor = '#6B8E5F'
       text = '¡Excelente!'
     }
 
@@ -113,10 +113,10 @@ export default function BudgetTracker({ selectedPeriod }: BudgetTrackerProps) {
   // Determine segment colors
   const getSegmentColor = (index: number) => {
     if (index >= filledSegments) return 'var(--color-label-quaternary)'
-    if (percentage >= 90) return '#ff3b30'
-    if (percentage >= 75) return '#ff9500'
-    if (percentage >= 50) return '#ffcc00'
-    return '#34c759'
+    if (percentage >= 90) return '#B34A3C'
+    if (percentage >= 75) return '#C4782B'
+    if (percentage >= 50) return '#E8B478'
+    return '#6B8E5F'
   }
 
   return (

@@ -1,297 +1,306 @@
-@import "tailwindcss";
-
-/* ═══════════════════════════════════════════════════════════
-   iOS NATIVE FEEL — Design Tokens
-   
-   Aesthetic: translucency, spring physics, depth.
-   Typography: Cabinet Grotesk (headings) + Inter (body).
-   
-   IMPORTANT: These :root vars are the primary source of truth.
-   They work with var() in inline styles AND with Tailwind via @theme below.
-   
-   Philosophy: mobile-first, tabular numbers, intentional whitespace.
-   When we do the full visual refresh, only these tokens change.
-   ═══════════════════════════════════════════════════════════ */
-
-/* ── Light mode tokens (default) ─────────────────────────── */
-:root {
-  /* Fonts */
-  --font-heading: "Cabinet Grotesk", var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-body: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  
-  /* Surfaces */
-  --color-surface-primary: #ffffff;
-  --color-surface-secondary: #f2f2f7;
-  --color-surface-tertiary: #ffffff;
-  --color-surface-elevated: #ffffff;
-  --color-surface-quaternary: rgba(118, 118, 128, 0.08);
-  
-  /* Labels */
-  --color-label-primary: #000000;
-  --color-label-secondary: rgba(60, 60, 67, 0.6);
-  --color-label-tertiary: rgba(60, 60, 67, 0.3);
-  --color-label-quaternary: rgba(60, 60, 67, 0.18);
-  --color-label-inverted: #ffffff;
-  
-  /* Semantic accents (Apple HIG-inspired) */
-  --color-accent: #007aff;
-  --color-success: #34c759;
-  --color-warning: #ff9500;
-  --color-destructive: #ff3b30;
-  --color-purple: #af52de;
-  --color-pink: #ff2d55;
-  --color-teal: #5ac8fa;
-  
-  /* Dividers */
-  --color-separator: rgba(60, 60, 67, 0.29);
-  --color-separator-strong: rgba(60, 60, 67, 0.36);
-  
-  /* Radius */
-  --radius-xs: 6px;
-  --radius-sm: 10px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
-  --radius-xl: 28px;
-  --radius-full: 9999px;
-  
-  /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
-  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06);
-  --shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.18), 0 8px 16px rgba(0, 0, 0, 0.08);
-  --shadow-sheet: 0 -8px 32px rgba(0, 0, 0, 0.12);
-  
-  /* Transitions (spring feel) */
-  --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-bounce: cubic-bezier(0.68, -0.55, 0.27, 1.55);
-  --duration-fast: 180ms;
-  --duration-normal: 320ms;
-  --duration-slow: 480ms;
-  
-  --background: var(--color-surface-secondary);
-  --foreground: var(--color-label-primary);
-}
-
-/* ── Dark mode tokens (iOS-style deep dark) ──────────────── */
-.dark {
-  --color-surface-primary: #000000;
-  --color-surface-secondary: #1c1c1e;
-  --color-surface-tertiary: #2c2c2e;
-  --color-surface-elevated: #3a3a3c;
-  --color-surface-quaternary: rgba(118, 118, 128, 0.18);
-  
-  --color-label-primary: #ffffff;
-  --color-label-secondary: rgba(235, 235, 245, 0.6);
-  --color-label-tertiary: rgba(235, 235, 245, 0.3);
-  --color-label-quaternary: rgba(235, 235, 245, 0.18);
-  
-  --color-separator: rgba(84, 84, 88, 0.65);
-  
-  --background: var(--color-surface-secondary);
-  --foreground: var(--color-label-primary);
-}
-
-/* ── Tailwind v4 @theme — exposes variables as utility classes ── */
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-accent: var(--color-accent);
-  --color-success: var(--color-success);
-  --color-warning: var(--color-warning);
-  --color-destructive: var(--color-destructive);
-  
-  --font-sans: var(--font-body);
-  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", monospace;
-}
-
-/* ── Base styles ─────────────────────────────────────────── */
-html, body {
-  overflow-x: hidden; /* prevent long numbers/amounts from pushing viewport wider */
-  max-width: 100vw;
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-body);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  font-feature-settings: "ss01", "cv01";
-}
-
-/* Tabular numbers for amounts everywhere */
-.amount, [data-amount] {
-  font-variant-numeric: tabular-nums;
-  font-family: var(--font-heading);
-  font-weight: 700;
-}
-
-/* Heading typography */
-h1, h2, h3, .heading {
-  font-family: var(--font-heading);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-
-h1 { font-size: 34px; line-height: 40px; }
-h2 { font-size: 28px; line-height: 34px; }
-h3 { font-size: 22px; line-height: 28px; }
-
-/* ── Bottom sheet animations ─────────────────────────────── */
-@keyframes sheet-slide-up {
-  from { transform: translateY(100%); }
-  to   { transform: translateY(0); }
-}
-
-.sheet-enter {
-  animation: sheet-slide-up var(--duration-normal) var(--ease-spring);
-}
-
-/* iOS-style backdrop blur for sheets */
-.sheet-backdrop {
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  background: rgba(0, 0, 0, 0.35);
-}
-
-/* Sheet drag-handle visual cue */
-.sheet-handle-bar {
-  width: 36px;
-  height: 5px;
-  border-radius: var(--radius-full);
-  background: rgba(120, 120, 128, 0.34);
-  margin: 8px auto;
-}
-
-/* ── Utility: hide scroll but keep scrollable ────────────── */
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-
-/* ── FAB tap feedback ────────────────────────────────────── */
-.fab-tap {
-  transition: transform var(--duration-fast) var(--ease-spring);
-}
-.fab-tap:active {
-  transform: scale(0.94);
-}
-
-/* ── FAB — fixed to viewport via portal ──────────────────── */
-/* Always visible. Mobile-first, then aligned to content on wider screens. */
-.fab-fixed {
-  /* Positioning */
-  position: fixed;
-  z-index: 40;
-  right: 20px;
-  bottom: calc(92px + env(safe-area-inset-bottom, 0px));
-
-  /* Sizing */
-  width: 56px;
-  height: 56px;
-
-  /* Visual */
-  border: none;
-  border-radius: var(--radius-full);
-  background: var(--color-accent);
-  color: white;
-  box-shadow: 0 8px 24px rgba(0, 122, 255, 0.35);
-  cursor: pointer;
-
-  /* Layout */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  /* Animation */
-  transition: transform var(--duration-fast) var(--ease-spring),
-              box-shadow var(--duration-fast) ease-out;
-}
-
-.fab-fixed:hover {
-  transform: scale(1.05);
-  box-shadow: 0 12px 32px rgba(0, 122, 255, 0.45);
-}
-
-.fab-fixed:active {
-  transform: scale(0.94);
-}
-
-/* Align FAB with container edge on wider screens (container = max-width:500px centered) */
-@media (min-width: 500px) {
-  .fab-fixed {
-    /* 50% - half of max-width (250px) - 24px margin from container edge */
-    right: calc(50% - 250px + 20px);
-    width: 60px;
-    height: 60px;
-  }
-}
-
-/* ── CategoryIcon: expand SVGs to fill container ────────── */
-.category-icon svg {
-  width: 100%;
-  height: 100%;
-}
-
-/* ── Expense Modal: bottom sheet on mobile, dialog on desktop */
-.expense-modal-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-}
-
-.expense-modal-wrapper {
-  position: fixed;
-  inset: 0;
-  z-index: 51;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding: 0;
-}
-
-.expense-modal-content {
-  width: 100%;
-  max-height: 92vh;
-  overflow-y: auto;
-  background: var(--color-surface-elevated);
-  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-  padding: 8px 20px calc(24px + env(safe-area-inset-bottom));
-  animation: modal-slide-up var(--duration-normal) var(--ease-spring);
-}
-
-@keyframes modal-slide-up {
-  from { transform: translateY(100%); }
-  to   { transform: translateY(0); }
-}
-
-/* Desktop: centered dialog */
-@media (min-width: 640px) {
-  .expense-modal-wrapper {
-    align-items: center;
-    padding: 16px;
-  }
-  .expense-modal-content {
-    max-width: 500px;
-    border-radius: var(--radius-lg);
-    animation: dialog-appear var(--duration-normal) var(--ease-spring);
-  }
-}
-
-/* ── Dialog appear animation ────────────────────────────── */
-@keyframes dialog-appear {
-  from { transform: scale(0.95); opacity: 0; }
-  to   { transform: scale(1); opacity: 1; }
-}
-
-/* ── Menu appear animation (popover) ───────────────────── */
-@keyframes menu-appear {
-  from { transform: scale(0.9) translateY(-8px); opacity: 0; }
-  to   { transform: scale(1) translateY(0); opacity: 1; }
-}
+     1|@import "tailwindcss";
+     2|
+     3|/* ═══════════════════════════════════════════════════════════
+     4|   iOS NATIVE FEEL — Design Tokens
+     5|   
+     6|   Aesthetic: translucency, spring physics, depth.
+     7|   Typography: Cabinet Grotesk (headings) + Inter (body).
+     8|   
+     9|   IMPORTANT: These :root vars are the primary source of truth.
+    10|   They work with var() in inline styles AND with Tailwind via @theme below.
+    11|   
+    12|   Philosophy: mobile-first, tabular numbers, intentional whitespace.
+    13|   When we do the full visual refresh, only these tokens change.
+    14|   ═══════════════════════════════════════════════════════════ */
+    15|
+    16|/* ── Light mode tokens (default) ─────────────────────────── */
+    17|/* "Terraced Warm" — organic, warm, human. Crafted feel. */
+    18|:root {
+    19|  /* Fonts */
+    20|  --font-heading: "Cabinet Grotesk", var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+    21|  --font-body: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+    22|  
+    23|  /* Surfaces — warm creams, not gray */
+    24|  --color-surface-primary: #FBF8F3;         /* cream */
+    25|  --color-surface-secondary: #F4EDE4;       /* sand — main background */
+    26|  --color-surface-tertiary: #FBF8F3;
+    27|  --color-surface-elevated: #FFFFFF;        /* cards float up */
+    28|  --color-surface-quaternary: rgba(45, 74, 62, 0.06);
+    29|  
+    30|  /* Labels — warm ink, not cool gray */
+    31|  --color-label-primary: #1A1612;           /* warm ink */
+    32|  --color-label-secondary: rgba(26, 22, 18, 0.55);
+    33|  --color-label-tertiary: rgba(26, 22, 18, 0.32);
+    34|  --color-label-quaternary: rgba(26, 22, 18, 0.14);
+    35|  --color-label-inverted: #F4EDE4;
+    36|  
+    37|  /* Semantic accents — earthy, distinctive */
+    38|  --color-accent: #2D4A3E;                  /* forest green (primary action) */
+    39|  --color-accent-soft: #4A6B5C;             /* lighter tint for hover */
+    40|  --color-success: #6B8E5F;                 /* sage green */
+    41|  --color-warning: #E8B478;                 /* soft gold */
+    42|  --color-destructive: #B34A3C;             /* muted terracotta */
+    43|  --color-purple: #7D5A8C;                  /* dusty plum */
+    44|  --color-pink: #C8553D;                    /* terracotta */
+    45|  --color-teal: #8CA57B;                    /* moss */
+    46|  
+    47|  /* Dividers */
+    48|  --color-separator: rgba(45, 74, 62, 0.12);
+    49|  --color-separator-strong: rgba(45, 74, 62, 0.22);
+    50|  
+    51|  /* Radius */
+    52|  --radius-xs: 6px;
+    53|  --radius-sm: 10px;
+    54|  --radius-md: 14px;
+    55|  --radius-lg: 20px;
+    56|  --radius-xl: 28px;
+    57|  --radius-full: 9999px;
+    58|  
+    59|  /* Shadows — warm tones */
+    60|  --shadow-sm: 0 1px 2px rgba(45, 36, 28, 0.06);
+    61|  --shadow-md: 0 4px 12px rgba(45, 36, 28, 0.08), 0 1px 3px rgba(45, 36, 28, 0.04);
+    62|  --shadow-lg: 0 12px 32px rgba(45, 36, 28, 0.12), 0 4px 8px rgba(45, 36, 28, 0.06);
+    63|  --shadow-xl: 0 24px 48px rgba(45, 36, 28, 0.18), 0 8px 16px rgba(45, 36, 28, 0.08);
+    64|  --shadow-sheet: 0 -8px 32px rgba(45, 36, 28, 0.14);
+    65|  
+    66|  /* Transitions (spring feel) */
+    67|  --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+    68|  --ease-bounce: cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    69|  --duration-fast: 180ms;
+    70|  --duration-normal: 320ms;
+    71|  --duration-slow: 480ms;
+    72|  
+    73|  --background: var(--color-surface-secondary);
+    74|  --foreground: var(--color-label-primary);
+    75|}
+    76|
+    77|/* ── Dark mode tokens (warm dark — not cold gray) ───────── */
+    78|.dark {
+    79|  --color-surface-primary: #1A1612;          /* warm ink */
+    80|  --color-surface-secondary: #120F0C;        /* near-black with brown undertone */
+    81|  --color-surface-tertiary: #252019;
+    82|  --color-surface-elevated: #2E2821;
+    83|  --color-surface-quaternary: rgba(244, 237, 228, 0.10);
+    84|  
+    85|  --color-label-primary: #F4EDE4;            /* cream */
+    86|  --color-label-secondary: rgba(244, 237, 228, 0.65);
+    87|  --color-label-tertiary: rgba(244, 237, 228, 0.38);
+    88|  --color-label-quaternary: rgba(244, 237, 228, 0.18);
+    89|  
+    90|  --color-separator: rgba(244, 237, 228, 0.14);
+    91|  --color-separator-strong: rgba(244, 237, 228, 0.24);
+    92|  
+    93|  /* Slightly softened accents for dark mode */
+    94|  --color-accent: #8CA57B;                   /* moss (easier on eyes than forest) */
+    95|  --color-accent-soft: #A8BD99;
+    96|  --color-success: #8CA57B;
+    97|  --color-warning: #E8B478;
+    98|  --color-destructive: #C8553D;
+    99|  
+   100|  --background: var(--color-surface-secondary);
+   101|  --foreground: var(--color-label-primary);
+   102|}
+   103|
+   104|/* ── Tailwind v4 @theme — exposes variables as utility classes ── */
+   105|@theme inline {
+   106|  --color-background: var(--background);
+   107|  --color-foreground: var(--foreground);
+   108|  --color-accent: var(--color-accent);
+   109|  --color-success: var(--color-success);
+   110|  --color-warning: var(--color-warning);
+   111|  --color-destructive: var(--color-destructive);
+   112|  
+   113|  --font-sans: var(--font-body);
+   114|  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", monospace;
+   115|}
+   116|
+   117|/* ── Base styles ─────────────────────────────────────────── */
+   118|html, body {
+   119|  overflow-x: hidden; /* prevent long numbers/amounts from pushing viewport wider */
+   120|  max-width: 100vw;
+   121|}
+   122|
+   123|body {
+   124|  background: var(--background);
+   125|  color: var(--foreground);
+   126|  font-family: var(--font-body);
+   127|  -webkit-font-smoothing: antialiased;
+   128|  -moz-osx-font-smoothing: grayscale;
+   129|  font-feature-settings: "ss01", "cv01";
+   130|}
+   131|
+   132|/* Tabular numbers for amounts everywhere */
+   133|.amount, [data-amount] {
+   134|  font-variant-numeric: tabular-nums;
+   135|  font-family: var(--font-heading);
+   136|  font-weight: 700;
+   137|}
+   138|
+   139|/* Heading typography */
+   140|h1, h2, h3, .heading {
+   141|  font-family: var(--font-heading);
+   142|  font-weight: 700;
+   143|  letter-spacing: -0.02em;
+   144|}
+   145|
+   146|h1 { font-size: 34px; line-height: 40px; }
+   147|h2 { font-size: 28px; line-height: 34px; }
+   148|h3 { font-size: 22px; line-height: 28px; }
+   149|
+   150|/* ── Bottom sheet animations ─────────────────────────────── */
+   151|@keyframes sheet-slide-up {
+   152|  from { transform: translateY(100%); }
+   153|  to   { transform: translateY(0); }
+   154|}
+   155|
+   156|.sheet-enter {
+   157|  animation: sheet-slide-up var(--duration-normal) var(--ease-spring);
+   158|}
+   159|
+   160|/* iOS-style backdrop blur for sheets */
+   161|.sheet-backdrop {
+   162|  backdrop-filter: blur(20px) saturate(180%);
+   163|  -webkit-backdrop-filter: blur(20px) saturate(180%);
+   164|  background: rgba(0, 0, 0, 0.35);
+   165|}
+   166|
+   167|/* Sheet drag-handle visual cue */
+   168|.sheet-handle-bar {
+   169|  width: 36px;
+   170|  height: 5px;
+   171|  border-radius: var(--radius-full);
+   172|  background: rgba(120, 120, 128, 0.34);
+   173|  margin: 8px auto;
+   174|}
+   175|
+   176|/* ── Utility: hide scroll but keep scrollable ────────────── */
+   177|.scrollbar-hide {
+   178|  -ms-overflow-style: none;
+   179|  scrollbar-width: none;
+   180|}
+   181|.scrollbar-hide::-webkit-scrollbar {
+   182|  display: none;
+   183|}
+   184|
+   185|/* ── FAB tap feedback ────────────────────────────────────── */
+   186|.fab-tap {
+   187|  transition: transform var(--duration-fast) var(--ease-spring);
+   188|}
+   189|.fab-tap:active {
+   190|  transform: scale(0.94);
+   191|        {/* FAB — fixed to viewport via portal ──────────── */}
+   192|        /* Always visible. Mobile-first, then aligned to content on wider screens. */
+   193|        .fab-fixed {
+   194|          /* Positioning */
+   195|          position: fixed;
+   196|          z-index: 40;
+   197|          right: 20px;
+   198|          bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+   199|
+   200|          /* Sizing */
+   201|          width: 56px;
+   202|          height: 56px;
+   203|
+   204|          /* Visual */
+   205|          border: none;
+   206|          border-radius: var(--radius-full);
+   207|          background: var(--color-accent);
+   208|          color: var(--color-label-inverted);
+   209|          box-shadow: 0 8px 24px rgba(45, 74, 62, 0.28);
+   210|          cursor: pointer;
+   211|
+   212|          /* Layout */
+   213|          display: flex;
+   214|          align-items: center;
+   215|          justify-content: center;
+   216|
+   217|          /* Animation */
+   218|          transition: transform var(--duration-fast) var(--ease-spring),
+   219|                      box-shadow var(--duration-fast) ease-out;
+   220|        }
+   221|
+   222|        .fab-fixed:hover {
+   223|          transform: scale(1.05);
+   224|          box-shadow: 0 12px 32px rgba(45, 74, 62, 0.38);
+   225|        }
+   226|
+   227|.fab-fixed:active {
+   228|  transform: scale(0.94);
+   229|}
+   230|
+   231|/* Align FAB with container edge on wider screens (container = max-width:500px centered) */
+   232|@media (min-width: 500px) {
+   233|  .fab-fixed {
+   234|    /* 50% - half of max-width (250px) - 24px margin from container edge */
+   235|    right: calc(50% - 250px + 20px);
+   236|    width: 60px;
+   237|    height: 60px;
+   238|  }
+   239|}
+   240|
+   241|/* ── CategoryIcon: expand SVGs to fill container ────────── */
+   242|.category-icon svg {
+   243|  width: 100%;
+   244|  height: 100%;
+   245|}
+   246|
+   247|/* ── Expense Modal: bottom sheet on mobile, dialog on desktop */
+   248|.expense-modal-backdrop {
+   249|  position: fixed;
+   250|  inset: 0;
+   251|  z-index: 50;
+   252|  background: rgba(0, 0, 0, 0.4);
+   253|  backdrop-filter: blur(4px);
+   254|  -webkit-backdrop-filter: blur(4px);
+   255|}
+   256|
+   257|.expense-modal-wrapper {
+   258|  position: fixed;
+   259|  inset: 0;
+   260|  z-index: 51;
+   261|  display: flex;
+   262|  align-items: flex-end;
+   263|  justify-content: center;
+   264|  padding: 0;
+   265|}
+   266|
+   267|.expense-modal-content {
+   268|  width: 100%;
+   269|  max-height: 92vh;
+   270|  overflow-y: auto;
+   271|  background: var(--color-surface-elevated);
+   272|  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+   273|  padding: 8px 20px calc(24px + env(safe-area-inset-bottom));
+   274|  animation: modal-slide-up var(--duration-normal) var(--ease-spring);
+   275|}
+   276|
+   277|@keyframes modal-slide-up {
+   278|  from { transform: translateY(100%); }
+   279|  to   { transform: translateY(0); }
+   280|}
+   281|
+   282|/* Desktop: centered dialog */
+   283|@media (min-width: 640px) {
+   284|  .expense-modal-wrapper {
+   285|    align-items: center;
+   286|    padding: 16px;
+   287|  }
+   288|  .expense-modal-content {
+   289|    max-width: 500px;
+   290|    border-radius: var(--radius-lg);
+   291|    animation: dialog-appear var(--duration-normal) var(--ease-spring);
+   292|  }
+   293|}
+   294|
+   295|/* ── Dialog appear animation ────────────────────────────── */
+   296|@keyframes dialog-appear {
+   297|  from { transform: scale(0.95); opacity: 0; }
+   298|  to   { transform: scale(1); opacity: 1; }
+   299|}
+   300|
+   301|/* ── Menu appear animation (popover) ───────────────────── */
+   302|@keyframes menu-appear {
+   303|  from { transform: scale(0.9) translateY(-8px); opacity: 0; }
+   304|  to   { transform: scale(1) translateY(0); opacity: 1; }
+   305|}
+   306|

@@ -22,7 +22,7 @@ type ListItem =
 const BUDGET_TYPE_CONFIG = {
   INCOME: {
     label: 'Ingreso',
-    color: '#34c759',
+    color: '#6B8E5F',
     sign: '+',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -33,7 +33,7 @@ const BUDGET_TYPE_CONFIG = {
   },
   ADJUSTMENT: {
     label: 'Ajuste',
-    color: '#007aff',
+    color: '#2D4A3E',
     sign: '+',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -44,7 +44,7 @@ const BUDGET_TYPE_CONFIG = {
   },
   DEDUCTION: {
     label: 'Deducción',
-    color: '#ff3b30',
+    color: '#B34A3C',
     sign: '-',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">

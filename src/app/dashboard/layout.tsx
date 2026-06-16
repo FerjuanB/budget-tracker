@@ -146,7 +146,7 @@ export default function DashboardLayout({
             width: 36,
             height: 36,
             borderRadius: '50%',
-            background: 'linear-gradient(135deg, #007aff, #5856d6)',
+        background: 'linear-gradient(135deg, #2D4A3E, #5B3D6B)',
             color: 'white',
             fontSize: 13,
             fontWeight: 600,

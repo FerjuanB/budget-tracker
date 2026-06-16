@@ -166,7 +166,7 @@ export default function FilterByCategory({
             style={{
               background: 'var(--color-accent)',
               color: 'white',
-              boxShadow: '0 4px 12px rgba(0, 122, 255, 0.25)',
+              boxShadow: '0 4px 12px rgba(45, 74, 62, 0.22)',
             }}
             title="Agregar ingreso"
             aria-label="Agregar ingreso"

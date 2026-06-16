@@ -78,11 +78,11 @@ export default function ActionSheet({ onQuickAdd, onOcr, onBudget, onCancel }: A
               <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
             </svg>
           }
-          iconBg="#34c75912"
-          iconColor="#34c759"
+          iconBg="#6B8E5F14"
+          iconColor="#6B8E5F"
           title="Gasto rápido"
           description="Monto, categoría y listo en 3 segundos"
-          accentColor="#34c759"
+          accentColor="#6B8E5F"
           onClick={onQuickAdd}
         />
 
@@ -93,11 +93,11 @@ export default function ActionSheet({ onQuickAdd, onOcr, onBudget, onCancel }: A
               <circle cx="12" cy="13" r="4" />
             </svg>
           }
-          iconBg="#ff950012"
-          iconColor="#ff9500"
+          iconBg="#C4782B14"
+          iconColor="#C4782B"
           title="Foto del ticket"
           description="Escaneamos los datos con IA"
-          accentColor="#ff9500"
+          accentColor="#C4782B"
           onClick={onOcr}
         />
 
@@ -108,11 +108,11 @@ export default function ActionSheet({ onQuickAdd, onOcr, onBudget, onCancel }: A
               <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
             </svg>
           }
-          iconBg="#007aff12"
-          iconColor="#007aff"
+          iconBg="#2D4A3E14"
+          iconColor="#2D4A3E"
           title="Agregar ingreso"
           description="Sumá presupuesto al período actual"
-          accentColor="#007aff"
+          accentColor="#2D4A3E"
           onClick={onBudget}
         />
       </div>

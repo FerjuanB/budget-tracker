@@ -224,8 +224,8 @@ export default function DashboardPage() {
                   <div
                     className="rounded-[var(--radius-lg)] p-5"
                     style={{
-                      background: 'rgba(255, 149, 0, 0.08)',
-                      border: '1px solid rgba(255, 149, 0, 0.2)',
+                      background: 'rgba(196, 120, 43, 0.10)',
+                      border: '1px solid rgba(196, 120, 43, 0.25)',
                     }}
                   >
                     <p
