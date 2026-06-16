@@ -2,8 +2,9 @@
 
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import ClosePeriodDialog from '@/components/ClosePeriodDialog'
 
 export default function DashboardLayout({
   children,
@@ -12,19 +13,56 @@ export default function DashboardLayout({
 }) {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [showCloseDialog, setShowCloseDialog] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+  const avatarRef = useRef<HTMLButtonElement>(null)
 
+  // Redirect to signin if unauthenticated
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin')
     }
   }, [status, router])
 
+  // Close menu on outside click
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (
+        menuRef.current && 
+        !menuRef.current.contains(e.target as Node) &&
+        avatarRef.current &&
+        !avatarRef.current.contains(e.target as Node)
+      ) {
+        setMenuOpen(false)
+      }
+    }
+    if (menuOpen) {
+      document.addEventListener('mousedown', handleClick)
+      return () => document.removeEventListener('mousedown', handleClick)
+    }
+  }, [menuOpen])
+
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div 
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: 'var(--background)' }}
+      >
         <div className="text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Cargando...</p>
+          <div 
+            className="inline-block h-8 w-8 rounded-full animate-spin"
+            style={{ 
+              border: '3px solid var(--color-label-quaternary)',
+              borderTopColor: 'var(--color-accent)',
+            }}
+          />
+          <p 
+            className="mt-4 text-sm"
+            style={{ color: 'var(--color-label-secondary)', fontFamily: 'var(--font-heading)' }}
+          >
+            Cargando...
+          </p>
         </div>
       </div>
     )
@@ -35,67 +73,215 @@ export default function DashboardLayout({
   }
 
   const handleSignOut = async () => {
+    setMenuOpen(false)
     await signOut({ callbackUrl: '/auth/signin' })
   }
 
+  // Generate initials from name or fallback to first letter of email
+  const getInitials = () => {
+    if (session.user?.name) {
+      return session.user.name
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase()
+    }
+    if (session.user?.email) {
+      return session.user.email.slice(0, 2).toUpperCase()
+    }
+    return 'US'
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header / Navbar */}
-      <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 justify-between items-center">
-            {/* Logo / Brand */}
-            <div className="flex items-center">
-              <Link href="/dashboard" className="flex items-center">
-                <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-calendar-dollar"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M13 21h-7a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v3" /><path d="M16 3v4" /><path d="M8 3v4" /><path d="M4 11h12.5" /><path d="M21 15h-2.5a1.5 1.5 0 0 0 0 3h1a1.5 1.5 0 0 1 0 3h-2.5" /><path d="M19 21v1m0 -8v1" /></svg>
-                </span>
-                <span className="ml-2 text-xl font-semibold text-gray-900 dark:text-white">
-Control y seguimiento de gastos                </span>
-              </Link>
-            </div>
+    <div 
+      className="min-h-screen"
+      style={{ background: 'var(--color-surface-secondary)' }}
+    >
+      {/* Minimal Header */}
+      <header 
+        className="sticky top-0 z-20 px-5 pt-3 pb-2 flex items-center justify-between"
+        style={{ 
+          background: 'var(--color-surface-secondary)',
+          backdropFilter: 'blur(20px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+        }}
+      >
+        {/* Logo */}
+        <Link href="/dashboard" className="flex items-center gap-2 no-underline">
+          <svg 
+            width="20" 
+            height="20" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="2" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+            style={{ color: 'var(--color-accent)' }}
+          >
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          <span 
+            className="text-[15px]"
+            style={{ 
+              fontFamily: 'var(--font-heading)', 
+              fontWeight: 700,
+              color: 'var(--color-label-primary)',
+            }}
+          >
+            BTRGHTO
+          </span>
+        </Link>
 
-            {/* User menu */}
-            <div className="flex items-center gap-4">
-              {/* User info */}
-              <div className="hidden sm:block text-right">
-                <p className="text-sm font-medium text-gray-900 dark:text-white">
-                  {session.user?.name || 'Usuario'}
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {session.user?.email}
-                </p>
-              </div>
+        {/* Avatar */}
+        <button
+          ref={avatarRef}
+          onClick={() => setMenuOpen((o) => !o)}
+          className="flex items-center justify-center transition-transform active:scale-95"
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #007aff, #5856d6)',
+            color: 'white',
+            fontSize: 13,
+            fontWeight: 600,
+            fontFamily: 'var(--font-heading)',
+            border: 'none',
+            cursor: 'pointer',
+          }}
+          aria-label="Menú de usuario"
+        >
+          {getInitials()}
+        </button>
 
-              {/* Logout button */}
-              <button
-                onClick={handleSignOut}
-                className="inline-flex items-center gap-2 rounded-md bg-white dark:bg-gray-700 px-3 py-2 text-sm font-semibold text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
-              >
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth="2"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"
-                  />
-                </svg>
-                <span className="hidden sm:inline">Cerrar Sesión</span>
-              </button>
-            </div>
+        {/* Avatar Menu Popover */}
+        {menuOpen && (
+          <div
+            ref={menuRef}
+            className="absolute top-[52px] right-5 min-w-[200px] overflow-hidden"
+            style={{
+              background: 'var(--color-surface-primary)',
+              borderRadius: 'var(--radius-md)',
+              boxShadow: 'var(--shadow-lg)',
+              animation: 'menu-appear 200ms var(--ease-spring) forwards',
+            }}
+          >
+            {/* Profile */}
+            <button
+              onClick={() => setMenuOpen(false)}
+              className="w-full flex items-center gap-2.5 px-3.5 py-3 text-left transition-colors"
+              style={{
+                background: 'transparent',
+                border: 'none',
+                fontSize: 14,
+                fontFamily: 'var(--font-heading)',
+                color: 'var(--color-label-primary)',
+                cursor: 'pointer',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'var(--color-surface-quaternary)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              Perfil
+            </button>
+
+            {/* Settings */}
+            <button
+              onClick={() => setMenuOpen(false)}
+              className="w-full flex items-center gap-2.5 px-3.5 py-3 text-left transition-colors"
+              style={{
+                background: 'transparent',
+                border: 'none',
+                fontSize: 14,
+                fontFamily: 'var(--font-heading)',
+                color: 'var(--color-label-primary)',
+                cursor: 'pointer',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'var(--color-surface-quaternary)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+              </svg>
+              Configuración
+            </button>
+
+            {/* Separator */}
+            <div 
+              className="mx-3 my-1"
+              style={{ height: 1, background: 'var(--color-separator)' }}
+            />
+
+            {/* Close period (danger, duplicated entry point) */}
+            <button
+              onClick={() => {
+                setMenuOpen(false)
+                setShowCloseDialog(true)
+              }}
+              className="w-full flex items-center gap-2.5 px-3.5 py-3 text-left transition-colors"
+              style={{
+                background: 'transparent',
+                border: 'none',
+                fontSize: 14,
+                fontFamily: 'var(--font-heading)',
+                color: 'var(--color-destructive)',
+                cursor: 'pointer',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'var(--color-surface-quaternary)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              </svg>
+              Cerrar período
+            </button>
+
+            {/* Sign out */}
+            <button
+              onClick={handleSignOut}
+              className="w-full flex items-center gap-2.5 px-3.5 py-3 text-left transition-colors"
+              style={{
+                background: 'transparent',
+                border: 'none',
+                fontSize: 14,
+                fontFamily: 'var(--font-heading)',
+                color: 'var(--color-label-primary)',
+                cursor: 'pointer',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'var(--color-surface-quaternary)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+              </svg>
+              Cerrar sesión
+            </button>
           </div>
-        </div>
-      </nav>
+        )}
+      </header>
 
-      {/* Main content */}
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+      {/* Main content — mobile-first, no heavy wrapper */}
+      <main className="mx-auto max-w-[500px] pb-24">
         {children}
       </main>
+
+      {/* Shared Close Period Dialog */}
+      <ClosePeriodDialog
+        isOpen={showCloseDialog}
+        onClose={() => setShowCloseDialog(false)}
+      />
     </div>
   )
 }

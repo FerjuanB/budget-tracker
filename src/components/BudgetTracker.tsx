@@ -1,6 +1,7 @@
 'use client'
 
-import { useCurrentPeriod, useClosePeriod, useExpenses, BudgetPeriod } from '@/hooks/useBudgetData'
+import { useCurrentPeriod, useExpenses, BudgetPeriod } from '@/hooks/useBudgetData'
+import ClosePeriodDialog from './ClosePeriodDialog'
 import { useState } from 'react'
 
 interface BudgetTrackerProps {
@@ -9,7 +10,6 @@ interface BudgetTrackerProps {
 
 export default function BudgetTracker({ selectedPeriod }: BudgetTrackerProps) {
   const { data: currentPeriod, isLoading } = useCurrentPeriod()
-  const closePeriodMutation = useClosePeriod()
   const [showCloseDialog, setShowCloseDialog] = useState(false)
   
   const period = selectedPeriod || currentPeriod
@@ -53,19 +53,6 @@ export default function BudgetTracker({ selectedPeriod }: BudgetTrackerProps) {
     ? Math.round(summary.totalExpenses / currentDay)
     : 0
 
-  const handleClosePeriod = async () => {
-    if (!currentPeriod) return
-    
-    try {
-      await closePeriodMutation.mutateAsync(currentPeriod.id)
-      setShowCloseDialog(false)
-      // Show success toast (using browser alert for now, can be improved later)
-      alert('Período cerrado exitosamente')
-    } catch (error: any) {
-      alert(error.message || 'Error al cerrar período')
-    }
-  }
-
   if (isLoading || !period) {
     return (
       <div className="px-5 py-4 space-y-4">
@@ -97,7 +84,7 @@ export default function BudgetTracker({ selectedPeriod }: BudgetTrackerProps) {
     let text: string
 
     if (summary.remainingBudget < 0) {
-      bgColor = 'rgba(255, 59, 48, 0.15)' // red
+      bgColor = 'rgba(255, 59, 48, 0.15)'
       textColor = '#ff3b30'
       text = 'Presupuesto excedido'
     } else if (percentage >= 90) {
@@ -105,11 +92,11 @@ export default function BudgetTracker({ selectedPeriod }: BudgetTrackerProps) {
       textColor = '#ff3b30'
       text = '¡Cuidado! Casi agotado'
     } else if (percentage >= 75) {
-      bgColor = 'rgba(255, 149, 0, 0.15)' // orange
+      bgColor = 'rgba(255, 149, 0, 0.15)'
       textColor = '#ff9500'
       text = 'Ten precaución'
     } else if (percentage >= 50) {
-      bgColor = 'rgba(52, 199, 89, 0.15)' // green
+      bgColor = 'rgba(52, 199, 89, 0.15)'
       textColor = '#34c759'
       text = 'Vas bien'
     } else {
@@ -185,8 +172,7 @@ export default function BudgetTracker({ selectedPeriod }: BudgetTrackerProps) {
           {period.status === 'ACTIVE' && currentPeriod && (
             <button
               onClick={() => setShowCloseDialog(true)}
-              disabled={closePeriodMutation.isPending}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-[var(--color-destructive)] text-white disabled:opacity-50 disabled:cursor-not-allowed transition-transform"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-[var(--color-destructive)] text-white transition-transform"
               style={{ transform: 'scale(1)', fontFamily: 'var(--font-heading)' }}
               onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.94)'}
               onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
@@ -210,7 +196,6 @@ export default function BudgetTracker({ selectedPeriod }: BudgetTrackerProps) {
 
       {/* Stats Cards */}
       <section className="px-5 pb-6 grid grid-cols-2 gap-3">
-        {/* Today's Spending */}
         <div 
           className="bg-[var(--color-surface-elevated)] rounded-[var(--radius-md)] p-3.5"
           style={{ boxShadow: 'var(--shadow-sm)' }}
@@ -223,7 +208,6 @@ export default function BudgetTracker({ selectedPeriod }: BudgetTrackerProps) {
           </div>
         </div>
 
-        {/* Average Daily */}
         <div 
           className="bg-[var(--color-surface-elevated)] rounded-[var(--radius-md)] p-3.5"
           style={{ boxShadow: 'var(--shadow-sm)' }}
@@ -237,53 +221,11 @@ export default function BudgetTracker({ selectedPeriod }: BudgetTrackerProps) {
         </div>
       </section>
 
-      {/* Close Period Dialog */}
-      {showCloseDialog && (
-        <div 
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-5"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setShowCloseDialog(false)
-          }}
-        >
-          <div 
-            className="bg-[var(--color-surface-primary)] rounded-[var(--radius-lg)] max-w-sm w-full p-6 transform scale-95 opacity-0"
-            style={{ 
-              animation: 'dialog-appear 250ms var(--ease-spring) forwards',
-            }}
-          >
-            <h3 className="heading text-lg mb-2">
-              ¿Cerrar el período?
-            </h3>
-            <p className="text-[var(--color-label-secondary)] text-sm mb-5 leading-relaxed">
-              Vas a archivar el período actual y empezar uno nuevo con presupuesto en $0. 
-              Los datos quedan guardados en el historial.
-            </p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setShowCloseDialog(false)}
-                className="flex-1 py-3 rounded-[var(--radius-md)] text-sm font-semibold bg-[var(--color-label-quaternary)] text-[var(--color-label-primary)] transition-transform"
-                style={{ transform: 'scale(1)', fontFamily: 'var(--font-heading)' }}
-                onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.95)'}
-                onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleClosePeriod}
-                disabled={closePeriodMutation.isPending}
-                className="flex-1 py-3 rounded-[var(--radius-md)] text-sm font-semibold bg-[var(--color-destructive)] text-white disabled:opacity-50 disabled:cursor-not-allowed transition-transform"
-                style={{ transform: 'scale(1)', fontFamily: 'var(--font-heading)' }}
-                onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.95)'}
-                onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-              >
-                {closePeriodMutation.isPending ? 'Cerrando...' : 'Cerrar'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Close Period Dialog (shared component) */}
+      <ClosePeriodDialog
+        isOpen={showCloseDialog}
+        onClose={() => setShowCloseDialog(false)}
+      />
     </>
   )
 }
