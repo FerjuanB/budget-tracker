@@ -11,6 +11,7 @@ import FilterByCategory from '@/components/FilterByCategory'
 import ExpenseModal from '@/components/ExpenseModal'
 import PeriodSelector from '@/components/PeriodSelector'
 import FloatingAddButton from '@/components/fab/FloatingAddButton'
+import BottomNav, { TabKey } from '@/components/BottomNav'
 
 export default function DashboardPage() {
   const { data: session } = useSession()
@@ -61,6 +62,7 @@ export default function DashboardPage() {
   const [showBudgetForm, setShowBudgetForm] = useState(false)
   const [showExpenseModal, setShowExpenseModal] = useState(false)
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | null>(null)
+  const [activeTab, setActiveTab] = useState<TabKey>('home')
 
   const handleEditExpense = (expense: Expense) => {
     setExpenseToEdit(expense)
@@ -91,10 +93,14 @@ export default function DashboardPage() {
   const hasBudget = selectedPeriod?.summary?.totalBudget && selectedPeriod.summary.totalBudget > 0
 
   return (
-    <div className="space-y-8 pb-24">
+    <>
       {/* FAB (floating action button) — main entry for adding expenses */}
       <FloatingAddButton />
-      {/* Welcome header */}
+
+      {/* ═══════  HOME TAB  ═══════ */}
+      {activeTab === 'home' && (
+        <>
+          {/* Welcome header */}
       {/* <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6 border border-gray-200 dark:border-gray-700">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
           ¡Bienvenido, {session?.user?.name || 'Usuario'}! 👋
@@ -337,6 +343,65 @@ export default function DashboardPage() {
           />
         </>
       )}
-    </div>
+
+      {/* ═══════  HISTORY TAB (placeholder)  ═══════ */}
+      {activeTab === 'history' && (
+        <div className="px-5 py-12 text-center">
+          <div
+            className="mx-auto flex items-center justify-center mb-3"
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius: '50%',
+              background: 'var(--color-surface-quaternary)',
+            }}
+          >
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--color-label-tertiary)' }}>
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+          <p className="font-semibold mb-1" style={{ fontFamily: 'var(--font-heading)', color: 'var(--color-label-secondary)' }}>
+            Historial
+          </p>
+          <p className="text-sm" style={{ color: 'var(--color-label-tertiary)' }}>
+            Períodos cerrados · Próximamente
+          </p>
+        </div>
+      )}
+
+      {/* ═══════  CATEGORIES TAB (placeholder)  ═══════ */}
+      {activeTab === 'categories' && (
+        <div className="px-5 py-12 text-center">
+          <div
+            className="mx-auto flex items-center justify-center mb-3"
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius: '50%',
+              background: 'var(--color-surface-quaternary)',
+            }}
+          >
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--color-label-tertiary)' }}>
+              <line x1="8" y1="6" x2="21" y2="6"/>
+              <line x1="8" y1="12" x2="21" y2="12"/>
+              <line x1="8" y1="18" x2="21" y2="18"/>
+              <line x1="3" y1="6" x2="3.01" y2="6"/>
+              <line x1="3" y1="12" x2="3.01" y2="12"/>
+              <line x1="3" y1="18" x2="3.01" y2="18"/>
+            </svg>
+          </div>
+          <p className="font-semibold mb-1" style={{ fontFamily: 'var(--font-heading)', color: 'var(--color-label-secondary)' }}>
+            Categorías
+          </p>
+          <p className="text-sm" style={{ color: 'var(--color-label-tertiary)' }}>
+            Gestión de categorías · Próximamente
+          </p>
+        </div>
+      )}
+
+      {/* Bottom Navigation */}
+      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+    </>
   )
 }

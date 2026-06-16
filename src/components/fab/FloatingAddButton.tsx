@@ -24,10 +24,12 @@ export default function FloatingAddButton() {
   return (
     <>
       {/* The FAB itself */}
+      {/* Positioned 92px from bottom (above BottomNav ~72px + 20px gap) + safe-area */}
       <button
         onClick={() => open('actions')}
-        className="fab-tap fixed bottom-6 right-6 z-40 w-16 h-16 rounded-[var(--radius-full)] text-white text-3xl shadow-xl flex items-center justify-center hover:scale-105 transition-transform"
+        className="fab-tap fixed right-5 z-40 w-14 h-14 rounded-[var(--radius-full)] text-white text-3xl shadow-xl flex items-center justify-center hover:scale-105 transition-transform"
         style={{
+          bottom: 'calc(92px + env(safe-area-inset-bottom))',
           background: 'var(--color-accent)',
           boxShadow: '0 8px 24px rgba(0, 122, 255, 0.35)',
           fontFamily: 'var(--font-heading)',
