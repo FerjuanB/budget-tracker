@@ -3,16 +3,18 @@
  *
  * Get your free API key at: https://aistudio.google.com/apikey
  *
- * Free tier (gemini-1.5-flash): 15 RPM, 1M tokens/min, 1500 RPD — plenty
+ * Free tier (gemini-2.5-flash): 15 RPM, 1M tokens/min, 1500 RPD — plenty
  * for family usage. OCR quality is state-of-the-art.
  *
- * NOTE: gemini-2.0-flash has regional quota restrictions in free tier
- * (often returns limit:0 / 429 RESOURCE_EXHAUSTED). Using gemini-1.5-flash
- * is the reliable choice for free-tier production apps.
+ * Model history:
+ * - gemini-2.0-flash-exp → rejected vision payloads (INVALID_ARGUMENT)
+ * - gemini-2.0-flash → quota limit:0 in some regions (RESOURCE_EXHAUSTED)
+ * - gemini-1.5-flash → removed, 404 NOT_FOUND
+ * - gemini-2.5-flash ✅ latest stable (June 2025), best free-tier OCR
  */
 
 const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta'
-const GEMINI_MODEL = 'gemini-1.5-flash' // most reliable free-tier model
+const GEMINI_MODEL = 'gemini-2.5-flash' // latest stable multimodal (June 2025)
 
 interface OcrParsedData {
   amount: number | null
