@@ -3,16 +3,16 @@
  *
  * Get your free API key at: https://aistudio.google.com/apikey
  *
- * Free tier: 15 RPM, 1M tokens/min, 1500 RPD — plenty for family usage
- * Model: gemini-2.0-flash (stable, best OCR for receipts, vision-enabled)
+ * Free tier (gemini-1.5-flash): 15 RPM, 1M tokens/min, 1500 RPD — plenty
+ * for family usage. OCR quality is state-of-the-art.
  *
- * NOTE: we previously used gemini-2.0-flash-exp (experimental) but it
- * rejects vision payloads with INVALID_ARGUMENT 400. The stable model
- * handles inlineData reliably.
+ * NOTE: gemini-2.0-flash has regional quota restrictions in free tier
+ * (often returns limit:0 / 429 RESOURCE_EXHAUSTED). Using gemini-1.5-flash
+ * is the reliable choice for free-tier production apps.
  */
 
 const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta'
-const GEMINI_MODEL = 'gemini-2.0-flash' // stable vision model
+const GEMINI_MODEL = 'gemini-1.5-flash' // most reliable free-tier model
 
 interface OcrParsedData {
   amount: number | null
@@ -97,21 +97,66 @@ export async function analyzeReceiptImage(
       mimeType,
     })
 
-    // Parse Gemini error for human-readable message
+    // Parse Gemini error for human-readable message + retryDelay
     let humanMessage = `Gemini rechazó la imagen (${response.status})`
+    let retryDelaySeconds = 0
     try {
       const errJson = JSON.parse(errText)
       const msg = errJson?.error?.message || errJson?.error?.status
       if (msg) humanMessage = msg
+
+      // Parse retryDelay (e.g., "13.025238652s" → 14)
+      const retryDelayStr = errJson?.error?.details?.find(
+        (d: { '@type'?: string }) => d['@type']?.includes('RetryInfo')
+      )?.retryDelay
+      if (retryDelayStr && typeof retryDelayStr === 'string') {
+        const parsed = parseFloat(retryDelayStr.replace('s', ''))
+        if (!isNaN(parsed)) retryDelaySeconds = Math.ceil(parsed)
+      }
+
+      // Quota exhausted — if we haven't already retried, do it once
+      if (response.status === 429 && retryDelaySeconds > 0 && retryDelaySeconds <= 30) {
+        console.log(`[Gemini OCR] 429 quota exceeded, retrying after ${retryDelaySeconds}s`)
+        await new Promise((r) => setTimeout(r, retryDelaySeconds * 1000))
+        const retryResponse = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        })
+        if (retryResponse.ok) {
+          // Swap and continue as if nothing happened
+          const retryResultText = await retryResponse.text()
+          return parseGeminiResponse(retryResultText)
+        }
+        // Retry also failed — fall through to normal error handling
+      }
     } catch {
       // not JSON, use raw text truncated to 500 chars for visibility
       humanMessage = errText.slice(0, 500)
     }
 
+    // Friendly 429 message
+    if (response.status === 429) {
+      const waitMsg = retryDelaySeconds > 0 ? ` Esperá ${retryDelaySeconds}s y probá de nuevo.` : ''
+      throw new Error(`Cuota de Gemini excedida.${waitMsg} El servicio gratuito tiene un límite por día; si lo excedés seguido, avisá al administrador.`)
+    }
+
     throw new Error(humanMessage)
   }
 
-  const result = await response.json()
+  const resultText = await response.text()
+  return parseGeminiResponse(resultText)
+}
+
+function parseGeminiResponse(resultText: string): OcrParsedData {
+  let result: any
+  try {
+    result = JSON.parse(resultText)
+  } catch {
+    console.error('[Gemini OCR] Response not valid JSON:', resultText.slice(0, 300))
+    throw new Error('Gemini devolvió una respuesta inválida. Probá de nuevo.')
+  }
+
   const text = result.candidates?.[0]?.content?.parts?.[0]?.text
 
   if (!text) {
