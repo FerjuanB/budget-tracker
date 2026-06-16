@@ -153,12 +153,12 @@
   .segment.filled.yellow { background: var(--color-warning); }
   .segment.filled.red { background: var(--color-destructive); }
   
-  /* Status pills row */
+  /* Status pills row — status left, close-period right */
   .status-row {
     display: flex;
-    gap: 8px;
+    justify-content: space-between;
+    align-items: center;
     margin-top: 14px;
-    flex-wrap: wrap;
   }
   
   .badge {
