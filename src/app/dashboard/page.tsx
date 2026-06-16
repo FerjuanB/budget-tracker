@@ -343,6 +343,8 @@ export default function DashboardPage() {
           />
         </>
       )}
+        </>
+      )}
 
       {/* ═══════  HISTORY TAB (placeholder)  ═══════ */}
       {activeTab === 'history' && (

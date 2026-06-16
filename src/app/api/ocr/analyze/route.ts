@@ -46,8 +46,8 @@ export async function POST(request: NextRequest) {
       data: {
         userId: user.id,
         imageUrl: null,
-        rawResponse: parsed,       // v1: same as parsed (no extra LLM output to keep)
-        parsed: parsed,
+        rawResponse: parsed as any,       // v1: same as parsed (no extra LLM output to keep)
+        parsed: parsed as any,
         status: 'PENDING',
       },
     })
