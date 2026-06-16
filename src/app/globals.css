@@ -174,3 +174,9 @@ h3 { font-size: 22px; line-height: 28px; }
 .fab-tap:active {
   transform: scale(0.94);
 }
+
+/* ── Dialog appear animation ────────────────────────────── */
+@keyframes dialog-appear {
+  from { transform: scale(0.95); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
