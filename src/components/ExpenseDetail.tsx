@@ -63,7 +63,7 @@ export default function ExpenseDetail({ expense, onEdit, onDelete }: ExpenseDeta
           color: 'var(--color-label-primary)',
         }}
       >
-        ${formatAmount(expense.amount)}
+        ${formatAmount(Number(expense.amount))}
       </div>
     </div>
   )

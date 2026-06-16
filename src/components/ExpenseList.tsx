@@ -155,7 +155,7 @@ export default function ExpenseList({
   })
 
   // Total of visible expenses (for header)
-  const totalDisplayed = filteredExpenses.reduce((sum, e) => sum + e.amount, 0)
+  const totalDisplayed = filteredExpenses.reduce((sum, e) => sum + Number(e.amount), 0)
 
   if (isLoading) {
     return (

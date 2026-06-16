@@ -46,7 +46,7 @@ export default function BudgetTracker({ selectedPeriod }: BudgetTrackerProps) {
   const todaysExpenses = expenses?.filter(e => 
     new Date(e.date).toISOString().split('T')[0] === today
   ) || []
-  const todaysTotal = todaysExpenses.reduce((sum, e) => sum + e.amount, 0)
+  const todaysTotal = todaysExpenses.reduce((sum, e) => sum + Number(e.amount), 0)
   
   // Calculate average daily spending
   const avgDaily = summary && currentDay > 0 
