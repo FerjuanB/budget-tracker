@@ -3,7 +3,7 @@
  *
  * Get your free API key at: https://aistudio.google.com/apikey
  *
- * Free tier (gemini-2.5-flash): 15 RPM, 1M tokens/min, 1500 RPD — plenty
+ * Free tier: rate limits are per-tier and dynamic — check AI Studio for exact numbers
  * for family usage. OCR quality is state-of-the-art.
  *
  * Model history:
