@@ -92,6 +92,10 @@ export default function ActionSheet({ onQuickAdd, onOcr, onRecurring, onCancel }
           onClick={onOcr}
         />
 
+        {/* Recurring expenses — disabled until cron generation is implemented.
+            Kept in code as placeholder. To re-enable: also uncomment the
+            RecurringSheet import + BottomSheet in FloatingAddButton.tsx and
+            uncomment the onRecurring handler there.
         <ActionCard
           icon="🔁"
           iconBg="#af52de12"
@@ -101,6 +105,7 @@ export default function ActionSheet({ onQuickAdd, onOcr, onRecurring, onCancel }
           accentColor="#af52de"
           onClick={onRecurring}
         />
+        */}
       </div>
 
       <button
