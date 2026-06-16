@@ -8,6 +8,7 @@ import BudgetForm from '@/components/BudgetForm'
 import ExpenseList from '@/components/ExpenseList'
 import FilterByCategory from '@/components/FilterByCategory'
 import ExpenseModal from '@/components/ExpenseModal'
+import PeriodHistory from '@/components/PeriodHistory'
 import FloatingAddButton from '@/components/fab/FloatingAddButton'
 import BottomSheet from '@/components/fab/shared/BottomSheet'
 import BottomNav, { TabKey } from '@/components/BottomNav'
@@ -89,60 +90,54 @@ export default function DashboardPage() {
         <>
           {/* No Active Period — Create New Period */}
           {noActivePeriod ? (
-            <div className="px-5 py-8">
+            <div className="px-5 py-16 flex flex-col items-center justify-center text-center">
               <div
-                className="rounded-[var(--radius-lg)] p-6"
+                className="flex items-center justify-center mb-4"
                 style={{
-                  background: 'var(--color-surface-elevated)',
-                  border: '1px solid var(--color-warning)',
+                  width: 72,
+                  height: 72,
+                  borderRadius: '50%',
+                  background: 'var(--color-surface-quaternary)',
+                  color: 'var(--color-label-secondary)',
                 }}
               >
-                <div className="flex items-start gap-4">
-                  <div
-                    className="flex items-center justify-center flex-shrink-0"
-                    style={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: 'var(--radius-md)',
-                      background: 'var(--color-warning)',
-                      color: '#fff',
-                    }}
-                  >
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                      <line x1="16" y1="2" x2="16" y2="6"/>
-                      <line x1="8" y1="2" x2="8" y2="6"/>
-                      <line x1="3" y1="10" x2="21" y2="10"/>
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <h3
-                      className="heading text-lg mb-1"
-                      style={{ color: 'var(--color-label-primary)' }}
-                    >
-                      No hay períodos activos
-                    </h3>
-                    <p
-                      className="text-sm leading-relaxed mb-4"
-                      style={{ color: 'var(--color-label-secondary)' }}
-                    >
-                      Has cerrado todos tus períodos. Para continuar registrando gastos, creá un nuevo período.
-                    </p>
-                    <button
-                      onClick={handleCreatePeriod}
-                      disabled={createPeriodMutation.isPending}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[var(--radius-md)] font-semibold text-white disabled:opacity-50 transition-transform active:scale-95"
-                      style={{
-                        background: 'var(--color-accent)',
-                        fontFamily: 'var(--font-heading)',
-                        fontSize: 14,
-                      }}
-                    >
-                      {createPeriodMutation.isPending ? 'Creando...' : 'Crear nuevo período'}
-                    </button>
-                  </div>
-                </div>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
               </div>
+              <h3
+                className="heading text-xl mb-1"
+                style={{ color: 'var(--color-label-primary)' }}
+              >
+                Sin períodos activos
+              </h3>
+              <p
+                className="text-sm mb-6 max-w-[280px]"
+                style={{ color: 'var(--color-label-secondary)', lineHeight: '1.5' }}
+              >
+                Empezá un nuevo período para continuar registrando tus gastos
+              </p>
+              <button
+                onClick={handleCreatePeriod}
+                disabled={createPeriodMutation.isPending}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[var(--radius-full)] font-semibold disabled:opacity-50 transition-transform active:scale-95"
+                style={{
+                  background: 'var(--color-accent)',
+                  color: 'var(--color-label-inverted)',
+                  fontFamily: 'var(--font-heading)',
+                  fontSize: 14,
+                  boxShadow: '0 4px 12px rgba(45, 74, 62, 0.22)',
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                {createPeriodMutation.isPending ? 'Creando...' : 'Nuevo período'}
+              </button>
             </div>
           ) : (
             <>
@@ -254,31 +249,8 @@ export default function DashboardPage() {
         </>
       )}
 
-      {/* ═══════  HISTORY TAB (placeholder)  ═══════ */}
-      {activeTab === 'history' && (
-        <div className="px-5 py-12 text-center">
-          <div
-            className="mx-auto flex items-center justify-center mb-3"
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: '50%',
-              background: 'var(--color-surface-quaternary)',
-            }}
-          >
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--color-label-tertiary)' }}>
-              <circle cx="12" cy="12" r="10"/>
-              <polyline points="12 6 12 12 16 14"/>
-            </svg>
-          </div>
-          <p className="font-semibold mb-1" style={{ fontFamily: 'var(--font-heading)', color: 'var(--color-label-secondary)' }}>
-            Historial
-          </p>
-          <p className="text-sm" style={{ color: 'var(--color-label-tertiary)' }}>
-            Períodos cerrados · Próximamente
-          </p>
-        </div>
-      )}
+      {/* ═══════  HISTORY TAB (Periodos cerrados)  ═══════ */}
+      {activeTab === 'history' && <PeriodHistory />}
 
       {/* ═══════  CATEGORIES TAB (placeholder)  ═══════ */}
       {activeTab === 'categories' && (

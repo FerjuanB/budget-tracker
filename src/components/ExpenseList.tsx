@@ -12,6 +12,7 @@ interface ExpenseListProps {
   filteredCategory: string
   onEditExpense: (expense: Expense) => void
   onDeleteExpense: (expenseId: string) => void
+  readOnly?: boolean
 }
 
 type ListItem =
@@ -126,6 +127,7 @@ export default function ExpenseList({
   filteredCategory,
   onEditExpense,
   onDeleteExpense,
+  readOnly = false,
 }: ExpenseListProps) {
   const BUDGET_FILTER = '__BUDGET_ADDITIONS__'
   const isBudgetFilter = filteredCategory === BUDGET_FILTER
@@ -300,6 +302,7 @@ export default function ExpenseList({
                 expense={item.data}
                 onEdit={() => onEditExpense(item.data)}
                 onDelete={() => onDeleteExpense(item.data.id)}
+                readOnly={readOnly}
               />
             ) : (
               <BudgetAdditionRow key={`budget-${item.data.id}`} addition={item.data} />

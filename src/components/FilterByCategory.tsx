@@ -11,6 +11,10 @@ interface FilterByCategoryProps {
    * This is the new way to add budget additions (replaces the legacy buttons)
    */
   onAddIncome?: () => void
+  /**
+   * If true, the "+" add income button is never shown (for read-only views like history).
+   */
+  hideAddButton?: boolean
 }
 
 /**
@@ -26,6 +30,7 @@ export default function FilterByCategory({
   selectedCategory,
   onFilterChange,
   onAddIncome,
+  hideAddButton = false,
 }: FilterByCategoryProps) {
   const { data: categories, isLoading } = useCategories()
   const { data: currentPeriod } = useCurrentPeriod()
@@ -159,7 +164,7 @@ export default function FilterByCategory({
         })}
 
         {/* Add income pill (+) */}
-        {currentPeriod?.status === 'ACTIVE' && onAddIncome && (
+        {currentPeriod?.status === 'ACTIVE' && onAddIncome && !hideAddButton && (
           <button
             onClick={onAddIncome}
             className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-95"

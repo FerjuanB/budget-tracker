@@ -8,9 +8,10 @@ interface ExpenseDetailProps {
   expense: Expense
   onEdit: () => void
   onDelete: () => void
+  readOnly?: boolean
 }
 
-export default function ExpenseDetail({ expense, onEdit, onDelete }: ExpenseDetailProps) {
+export default function ExpenseDetail({ expense, onEdit, onDelete, readOnly = false }: ExpenseDetailProps) {
 
   const formatAmount = (amount: number) => {
     return new Intl.NumberFormat('es-AR', {
@@ -21,14 +22,14 @@ export default function ExpenseDetail({ expense, onEdit, onDelete }: ExpenseDeta
 
   return (
     <div
-      className="flex items-center gap-3 px-3.5 py-3.5 transition-colors cursor-pointer"
+      className={`flex items-center gap-3 px-3.5 py-3.5 transition-colors ${readOnly ? '' : 'cursor-pointer'}`}
       style={{ 
         borderBottom: '1px solid var(--color-separator)',
       }}
-      onClick={onEdit}
-      onMouseDown={(e) => e.currentTarget.style.background = 'var(--color-surface-quaternary)'}
-      onMouseUp={(e) => e.currentTarget.style.background = ''}
-      onMouseLeave={(e) => e.currentTarget.style.background = ''}
+      onClick={readOnly ? undefined : onEdit}
+      onMouseDown={readOnly ? undefined : (e) => e.currentTarget.style.background = 'var(--color-surface-quaternary)'}
+      onMouseUp={readOnly ? undefined : (e) => e.currentTarget.style.background = ''}
+      onMouseLeave={readOnly ? undefined : (e) => e.currentTarget.style.background = ''}
     >
       <CategoryIcon
         categoryName={expense.category.name}
