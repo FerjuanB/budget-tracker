@@ -1,14 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useSession } from 'next-auth/react'
-import { useCurrentPeriod, usePeriods, useExpenses, useBudgetAdditions, useDeleteExpense, useCreatePeriod, Expense, BudgetPeriod } from '@/hooks/useBudgetData'
+import { useCurrentPeriod, useExpenses, useBudgetAdditions, useDeleteExpense, useCreatePeriod, Expense } from '@/hooks/useBudgetData'
 import BudgetTracker from '@/components/BudgetTracker'
 import BudgetForm from '@/components/BudgetForm'
 import ExpenseList from '@/components/ExpenseList'
 import FilterByCategory from '@/components/FilterByCategory'
 import ExpenseModal from '@/components/ExpenseModal'
-import PeriodSelector from '@/components/PeriodSelector'
 import FloatingAddButton from '@/components/fab/FloatingAddButton'
 import BottomSheet from '@/components/fab/shared/BottomSheet'
 import BottomNav, { TabKey } from '@/components/BottomNav'
@@ -16,26 +15,8 @@ import BottomNav, { TabKey } from '@/components/BottomNav'
 export default function DashboardPage() {
   const { data: session } = useSession()
   const { data: currentPeriod, error: currentPeriodError } = useCurrentPeriod()
-  const { data: allPeriods } = usePeriods()
   const createPeriodMutation = useCreatePeriod()
   
-  // Selected period state (defaults to current active period)
-  const [selectedPeriodId, setSelectedPeriodId] = useState<string | null>(null)
-  
-  // Set initial selected period to current period
-  useEffect(() => {
-    if (currentPeriod && !selectedPeriodId) {
-      setSelectedPeriodId(currentPeriod.id)
-    }
-  }, [currentPeriod?.id, selectedPeriodId])
-
-  // When current period data changes (e.g., after adding budget), refresh the selected period
-  useEffect(() => {
-    if (currentPeriod && selectedPeriodId === currentPeriod.id) {
-      setSelectedPeriodId(currentPeriod.id)
-    }
-  }, [currentPeriod?.summary?.totalBudget])
-
   // Handle create new period
   const handleCreatePeriod = async () => {
     try {
@@ -48,8 +29,8 @@ export default function DashboardPage() {
   // Check if no active period exists (404 error means no active period)
   const noActivePeriod = currentPeriodError && currentPeriodError.message.includes('No active period found')
   
-  // Get the selected period object
-  const selectedPeriod = allPeriods?.find(p => p.id === selectedPeriodId) || currentPeriod
+  // Always use current period (selector has been removed)
+  const selectedPeriod = currentPeriod
   const isActivePeriod = selectedPeriod?.status === 'ACTIVE'
   
   const { data: expenses, isLoading: loadingExpenses } = useExpenses(selectedPeriod?.id || '')
@@ -165,14 +146,6 @@ export default function DashboardPage() {
             </div>
           ) : (
             <>
-              {/* Period Selector — minimal, no wrapper card */}
-              <div className="px-5 pt-2 pb-1">
-                <PeriodSelector
-                  selectedPeriodId={selectedPeriodId}
-                  onPeriodChange={setSelectedPeriodId}
-                />
-              </div>
-
               {/* Budget Tracker (hero + stats) */}
               {hasBudget ? (
                 <BudgetTracker />

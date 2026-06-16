@@ -132,8 +132,7 @@ export default function DashboardLayout({
               fontWeight: 700,
               color: 'var(--color-label-primary)',
             }}
-          >
-            BTRGHTO
+          >Bat-Expenses
           </span>
         </Link>
 

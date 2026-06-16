@@ -3,6 +3,8 @@
 import { useCurrentPeriod, useExpenses, BudgetPeriod } from '@/hooks/useBudgetData'
 import ClosePeriodDialog from './ClosePeriodDialog'
 import { useState } from 'react'
+import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
 
 interface BudgetTrackerProps {
   selectedPeriod?: BudgetPeriod | null
@@ -131,7 +133,7 @@ export default function BudgetTracker({ selectedPeriod }: BudgetTrackerProps) {
             className="text-[52px] font-bold leading-none amount"
             style={{ 
               letterSpacing: '-0.03em',
-              color: summary.remainingBudget < 0 ? '#B34A3C' : '#2D4A3E',
+              color: summary.remainingBudget < 0 ? '#B34A3C' : '#2e59e1',
             }}
           >
             ${summary.remainingBudget.toLocaleString('es-AR')}
@@ -191,9 +193,13 @@ export default function BudgetTracker({ selectedPeriod }: BudgetTrackerProps) {
           )}
         </div>
 
-        {/* Day Counter */}
+        {/* Day Counter with Period */}
         <div className="text-[var(--color-label-tertiary)] text-xs font-medium" style={{ fontFamily: 'var(--font-heading)' }}>
-          Día {currentDay}
+          {period?.startDate && (
+            <>
+              {format(new Date(period.startDate), 'MMMM yyyy', { locale: es })} · Día {currentDay}
+            </>
+          )}
         </div>
       </section>
 
