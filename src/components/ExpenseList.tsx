@@ -3,6 +3,7 @@
 import ExpenseDetail from './ExpenseDetail'
 import { Expense, BudgetAddition } from '@/hooks/useBudgetData'
 import { CategoryIcon } from './CategoryIcon'
+import { formatCompactDay } from '@/lib/formatters'
 
 interface ExpenseListProps {
   expenses: Expense[]
@@ -54,22 +55,6 @@ const BUDGET_TYPE_CONFIG = {
   },
 }
 
-function formatCompactDate(dateString: string): string {
-  const date = new Date(dateString)
-  const now = new Date()
-  const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate())
-  const todayOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  const diffDays = Math.floor((todayOnly.getTime() - dateOnly.getTime()) / (1000 * 60 * 60 * 24))
-  
-  if (diffDays === 0) return 'Hoy'
-  if (diffDays === 1) return 'Ayer'
-  if (diffDays < 7) return `Hace ${diffDays} días`
-  if (date.getFullYear() === now.getFullYear()) {
-    return date.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })
-  }
-  return date.toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' })
-}
-
 function BudgetAdditionRow({ addition }: { addition: BudgetAddition }) {
   const config = BUDGET_TYPE_CONFIG[addition.type]
   
@@ -117,7 +102,7 @@ function BudgetAdditionRow({ addition }: { addition: BudgetAddition }) {
             color: 'var(--color-label-secondary)',
           }}
         >
-          {config.label} · {formatCompactDate(addition.date)}
+          {config.label} · {formatCompactDay(addition.date)}
         </div>
       </div>
 

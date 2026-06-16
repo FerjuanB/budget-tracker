@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, ReactNode } from 'react'
+import { ReactNode } from 'react'
 
 export type TabKey = 'home' | 'history' | 'categories'
 
@@ -95,11 +95,9 @@ export default function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
             }}
           >
             <div
-              className="transition-transform"
               style={{
                 width: 24,
                 height: 24,
-                transform: isActive ? 'scale(1)' : 'scale(1)',
                 color: 'currentColor',
               }}
             >

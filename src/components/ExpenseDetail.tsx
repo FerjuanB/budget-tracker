@@ -2,6 +2,7 @@
 
 import { Expense } from '@/hooks/useBudgetData'
 import { CategoryIcon } from './CategoryIcon'
+import { formatCompactDate } from '@/lib/formatters'
 
 interface ExpenseDetailProps {
   expense: Expense
@@ -10,30 +11,6 @@ interface ExpenseDetailProps {
 }
 
 export default function ExpenseDetail({ expense, onEdit, onDelete }: ExpenseDetailProps) {
-  // Compact date format: "Hoy, 14:32" / "Ayer" / "15 jun"
-  const formatCompactDate = (dateString: string) => {
-    const date = new Date(dateString)
-    const now = new Date()
-    
-    const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate())
-    const todayOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    const diffDays = Math.floor((todayOnly.getTime() - dateOnly.getTime()) / (1000 * 60 * 60 * 24))
-    
-    if (diffDays === 0) {
-      const hours = date.getHours().toString().padStart(2, '0')
-      const minutes = date.getMinutes().toString().padStart(2, '0')
-      return `Hoy, ${hours}:${minutes}`
-    }
-    if (diffDays === 1) return 'Ayer'
-    if (diffDays < 7) return `Hace ${diffDays} días`
-    
-    // Same year: "15 jun"
-    if (date.getFullYear() === now.getFullYear()) {
-      return date.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })
-    }
-    // Older: "15 jun 2024"
-    return date.toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' })
-  }
 
   const formatAmount = (amount: number) => {
     return new Intl.NumberFormat('es-AR', {
