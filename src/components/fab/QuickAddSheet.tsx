@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { useCategories, useCreateExpense, useCurrentPeriod, useExpenses, Category as CategoryType } from '@/hooks/useBudgetData'
+import BottomSheet from './shared/BottomSheet'
+import { resolveCategoryIcon } from '@/components/CategoryIcon'
 
 interface QuickAddSheetProps {
   onSuccess?: () => void
@@ -26,6 +28,7 @@ export default function QuickAddSheet({ onSuccess, onBack }: QuickAddSheetProps)
   const [categoryId, setCategoryId] = useState('')
   const [name, setName] = useState('')
   const [showNameField, setShowNameField] = useState(false)
+  const [showCategoryPicker, setShowCategoryPicker] = useState(false)
   const [error, setError] = useState('')
 
   const { data: categories } = useCategories()
@@ -67,8 +70,19 @@ export default function QuickAddSheet({ onSuccess, onBack }: QuickAddSheetProps)
       })
   }, [categories, expenses])
 
-  // Show top 8 in the grid (the rest can be revealed later via "see more")
-  const topCategories = sortedCategories.slice(0, 8)
+  // Show top 7 in the grid + 1 fixed "Elegir Categoría" button (8 total)
+  const topCategories = sortedCategories.slice(0, 7)
+
+  // All categories sorted alphabetically for the picker
+  const allCategoriesSorted = useMemo(() => {
+    if (!categories) return []
+    return [...(categories as CategoryType[])].sort((a, b) =>
+      a.name.localeCompare(b.name)
+    )
+  }, [categories])
+
+  // Whether the selected category is visible in the top-7 grid
+  const selectedNotInTop = categoryId && !topCategories.some((c) => c.id === categoryId)
 
   // Reset on open
   useEffect(() => {
@@ -76,6 +90,7 @@ export default function QuickAddSheet({ onSuccess, onBack }: QuickAddSheetProps)
     setCategoryId('')
     setName('')
     setShowNameField(false)
+    setShowCategoryPicker(false)
     setError('')
   }, [])
 
@@ -199,15 +214,119 @@ export default function QuickAddSheet({ onSuccess, onBack }: QuickAddSheetProps)
               </button>
             )
           })}
+
+          {/* Fixed "Elegir Categoría" button — always visible as the 8th slot */}
+          <button
+            type="button"
+            onClick={() => setShowCategoryPicker(true)}
+            className="fab-tap p-2 rounded-[var(--radius-md)] transition-all flex flex-col items-center justify-center min-h-[70px]"
+            style={{
+              background: selectedNotInTop ? 'var(--color-accent)' : 'transparent',
+              border: selectedNotInTop ? 'none' : '1.5px dashed var(--color-label-tertiary)',
+              color: selectedNotInTop ? '#fff' : 'var(--color-label-secondary)',
+            }}
+          >
+            <div className="text-xl">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="7" height="7" rx="1" />
+                <rect x="14" y="3" width="7" height="7" rx="1" />
+                <rect x="14" y="14" width="7" height="7" rx="1" />
+                <rect x="3" y="14" width="7" height="7" rx="1" />
+              </svg>
+            </div>
+            <div
+              className="text-[10px] mt-1 text-center leading-tight"
+              style={{ fontFamily: 'var(--font-heading)' }}
+            >
+              Elegir
+            </div>
+          </button>
         </div>
 
-        {/* Summary of sorting logic for user confidence */}
+        {/* Feedback chip: selected category not in top 7 */}
+        {selectedNotInTop && (() => {
+          const cat = (categories as CategoryType[] | undefined)?.find((c) => c.id === categoryId)
+          if (!cat) return null
+          const { color } = resolveCategoryIcon(cat.name, cat.icon)
+          return (
+            <div
+              className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs"
+              style={{
+                background: `${color}1A`,
+                color: color,
+                fontFamily: 'var(--font-heading)',
+              }}
+            >
+              <span>{cat.icon}</span>
+              <span>{cat.name}</span>
+              <button
+                type="button"
+                onClick={() => setCategoryId('')}
+                className="ml-0.5 opacity-60 hover:opacity-100"
+                aria-label="Quitar categoría"
+              >
+                ✕
+              </button>
+            </div>
+          )
+        })()}
+
         {sortedCategories.length > 0 && (
           <div className="text-[10px] text-[var(--color-label-secondary)] mt-2 text-center">
-            Mostrando las {Math.min(8, sortedCategories.length)} categorías más usadas del período
+            Mostrando las {Math.min(7, sortedCategories.length)} categorías más usadas del período
           </div>
         )}
       </div>
+
+      {/* Category Picker — nested bottom sheet with ALL categories */}
+      <BottomSheet
+        isOpen={showCategoryPicker}
+        onClose={() => setShowCategoryPicker(false)}
+        maxHeight={0.7}
+      >
+        <div className="px-1 pb-4">
+          <h3 className="heading text-[18px] mb-4">Elegir categoría</h3>
+          <div className="grid grid-cols-4 gap-2">
+            {allCategoriesSorted.map((cat) => {
+              const isSelected = categoryId === cat.id
+              const { icon: resolvedIcon, color } = resolveCategoryIcon(cat.name, cat.icon)
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => {
+                    setCategoryId(cat.id)
+                    setShowCategoryPicker(false)
+                  }}
+                  className="fab-tap p-2 rounded-[var(--radius-md)] transition-all flex flex-col items-center justify-center min-h-[70px]"
+                  style={{
+                    background: isSelected ? 'var(--color-accent)' : 'var(--color-surface-quaternary)',
+                    color: isSelected ? '#fff' : 'var(--color-label-primary)',
+                  }}
+                >
+                  <div
+                    className="flex items-center justify-center"
+                    style={{ width: 20, height: 20, color: isSelected ? '#fff' : color }}
+                  >
+                    <div style={{ width: 20, height: 20 }}>{resolvedIcon}</div>
+                  </div>
+                  <div
+                    className="text-[10px] mt-1 truncate w-full text-center leading-tight"
+                    style={{ fontFamily: 'var(--font-heading)' }}
+                  >
+                    {cat.name}
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+          {allCategoriesSorted.length === 0 && (
+            <div className="text-center text-sm text-[var(--color-label-secondary)] py-8">
+              No hay categorías disponibles
+            </div>
+          )}
+        </div>
+      </BottomSheet>
 
       {/* Optional name field */}
       {!showNameField ? (
