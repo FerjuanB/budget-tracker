@@ -128,7 +128,7 @@ export default function QuickAddSheet({ onSuccess, onBack }: QuickAddSheetProps)
   const overBudget = amount && parseFloat(amount) > (remaining || 0)
 
   return (
-    <div className="px-1 pb-4">
+    <div className="px-1 pb-4 w-full max-w-full overflow-hidden">
       <div className="flex items-center justify-between mb-4">
         <button
           onClick={onBack}
@@ -150,8 +150,8 @@ export default function QuickAddSheet({ onSuccess, onBack }: QuickAddSheetProps)
         <label className="text-xs text-[var(--color-label-secondary)] mb-2 block uppercase tracking-wide">
           Monto
         </label>
-        <div className="flex items-center gap-2 bg-[var(--color-surface-quaternary)] rounded-[var(--radius-md)] px-4 py-4">
-          <span className="text-xl text-[var(--color-label-secondary)]">$</span>
+        <div className="flex items-center gap-2 bg-[var(--color-surface-quaternary)] rounded-[var(--radius-md)] px-4 py-4 w-full max-w-full">
+          <span className="text-xl text-[var(--color-label-secondary)] flex-shrink-0">$</span>
           <input
             type="number"
             inputMode="decimal"
@@ -159,7 +159,7 @@ export default function QuickAddSheet({ onSuccess, onBack }: QuickAddSheetProps)
             onChange={(e) => setAmount(e.target.value)}
             autoFocus
             placeholder="0"
-            className="amount bg-transparent flex-1 text-4xl outline-none placeholder:text-[var(--color-label-quaternary)]"
+            className="amount bg-transparent flex-1 min-w-0 text-4xl outline-none placeholder:text-[var(--color-label-quaternary)]"
           />
         </div>
 
@@ -182,7 +182,7 @@ export default function QuickAddSheet({ onSuccess, onBack }: QuickAddSheetProps)
             (ordenadas por uso)
           </span>
         </label>
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-4 gap-2 w-full max-w-full">
           {topCategories.map((cat) => {
             const isSelected = categoryId === cat.id
             return (
@@ -286,7 +286,7 @@ export default function QuickAddSheet({ onSuccess, onBack }: QuickAddSheetProps)
       >
         <div className="px-1 pb-4">
           <h3 className="heading text-[18px] mb-4">Elegir categoría</h3>
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-4 gap-2 w-full max-w-full">
             {allCategoriesSorted.map((cat) => {
               const isSelected = categoryId === cat.id
               const { icon: resolvedIcon, color } = resolveCategoryIcon(cat.name, cat.icon)
