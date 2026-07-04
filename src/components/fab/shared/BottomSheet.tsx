@@ -119,7 +119,7 @@ export default function BottomSheet({
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        className="absolute bottom-0 left-0 right-0 overflow-y-auto bg-[var(--color-surface-elevated)] rounded-t-[var(--radius-xl)]"
+        className="absolute bottom-0 left-0 right-0 overflow-y-auto overflow-x-hidden bg-[var(--color-surface-elevated)] rounded-t-[var(--radius-xl)]"
         style={{
           maxHeight: `${maxHeight * 100}vh`,
           boxShadow: 'var(--shadow-sheet)',

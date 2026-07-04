@@ -305,7 +305,7 @@ export default function QuickAddSheet({ onSuccess, onBack }: QuickAddSheetProps)
                   }}
                 >
                   <div
-                    className="flex items-center justify-center"
+                    className="flex items-center justify-center overflow-hidden"
                     style={{ width: 20, height: 20, color: isSelected ? '#fff' : color }}
                   >
                     <div style={{ width: 20, height: 20 }}>{resolvedIcon}</div>
